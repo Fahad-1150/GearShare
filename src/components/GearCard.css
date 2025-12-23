@@ -15,6 +15,9 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   border-color: #e2e8f0;
 }
+.rating-value {
+  color: black;
+}
 
 /* --- Media Section (Top) --- */
 .card-media {

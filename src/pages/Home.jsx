@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import GearCard from '../components/GearCard';
 import './home.css';
 import logo from '../images/logo.png';
+import Signup from './Signup';
 const MOCK_GEAR = [
   { id: 1, name: "Sony A7 IV Mirrorless Camera", category: "Photography", price: 2000, rating: 4.9, reviews: 124, image: "https://4.img-dpreview.com/files/p/E~TS1180x0~articles/9494401150/Product-Images/Sony_alpha_7IV_beauty.jpeg", owner: "Nazmul", location: "Feni" },
   { id: 2, name: "Gopro 5", category: "Outdoor Photography", price: 450, rating: 4.8, reviews: 89, image: "https://media.dcrainmaker.com/images/2016/10/GoPro-Hero5-Black-Front-Shot_thumb.jpg", owner: "Haque", location: "Comilla" },
@@ -32,22 +33,22 @@ const Home = () => {
         <div className="hero-background">
           <div className="hero-sphere"></div>
         </div>
-        
+
         <div className="hero-content">
           <div className="status-pill">
             <span className="dot"></span>
             Now live in Dhaka
           </div>
-          
+
           <h1 className="main-title">
-            Stop buying,<br/>
+            Stop buying,<br />
             <span className="title-gradient">start sharing.</span>
           </h1>
-          
+
           <p className="hero-description">
             --The  trusted peer-to-peer gear Platfrom--
           </p>
-          
+
           <div className="search-container">
             <form onSubmit={handleSearch} className="search-box">
               <div className="glow-effect"></div>
@@ -56,7 +57,7 @@ const Home = () => {
                   <svg className="icon-search" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                  <input 
+                  <input
                     type="text"
                     placeholder="Search for gear..."
                     className="main-input"
@@ -89,7 +90,7 @@ const Home = () => {
           </div>
           <button className="view-all">View all listings &rarr;</button>
         </div>
-        
+
         <div className="card-grid">
           {MOCK_GEAR.map((item) => (
             <GearCard key={item.id} item={item} />
@@ -105,8 +106,8 @@ const Home = () => {
               <div className="blob-decoration"></div>
               <img src="https://images.unsplash.com/photo-1550291652-6ea9114a47b1?auto=format&fit=crop&q=80&w=800" className="lender-img" alt="Community" />
               <div className="stat-card">
-                <p className="stat-amount">45000TK+</p>
-                <p className="stat-label">Avg. Monthly Earner</p>
+                <p className="stat-amount">45,000TK+</p>
+                <p className="stat-label">Average Monthly Earner</p>
               </div>
             </div>
             <div className="text-side">
@@ -123,7 +124,12 @@ const Home = () => {
                   </li>
                 ))}
               </ul>
-              <button className="btn-primary">Start Listing Now</button>
+              <button
+                className="btn-primary"
+                onClick={() => <Signup onNavigate={navigateTo} />}
+              >
+                Start sharing now!
+              </button>
             </div>
           </div>
         </div>
@@ -135,8 +141,8 @@ const Home = () => {
           <div className="footer-top">
             <div className="footer-logo">
               <div className="logo-box">
-                 <img src={logo} alt="GearShare" className="logo-icon" />
-              
+                <img src={logo} alt="GearShare" className="logo-icon" />
+
               </div>
               <span className="logo-text">GearShare</span>
             </div>
