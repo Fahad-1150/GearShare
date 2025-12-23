@@ -1,0 +1,158 @@
+/* --- Social Login Grid --- */
+.social-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.social-button {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  color: #374151 !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.social-button:hover {
+  background-color: #f9fafb !important;
+  border-color: #d1d5db !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.social-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* --- Divider Style --- */
+.divider-area {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 32px 0;
+}
+
+.divider-line {
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background-color: #f1f5f9;
+  z-index: 1;
+}
+
+.divider-text {
+  position: relative;
+  z-index: 2;
+  background-color: #ffffff;
+  padding: 0 16px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* --- Form Layout --- */
+.auth-form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* --- Form Utilities (Remember/Forgot) --- */
+.form-utilities {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -8px;
+}
+
+.remember-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.checkbox-input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #4f46e5; /* Matches home page primary */
+  border-radius: 4px;
+}
+
+.checkbox-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.forgot-link {
+  font-size: 0.875rem;
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.forgot-link:hover {
+  color: #4338ca;
+  text-decoration: underline;
+}
+
+/* --- Submit Button (Dark/Indigo Style) --- */
+.submit-button {
+  width: 100% !important;
+  padding: 14px !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  background-color: #111827 !important; /* Matches home buttons */
+  color: white !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.submit-button:hover:not(:disabled) {
+  background-color: #000000 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+}
+
+.submit-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* --- Signup Prompt --- */
+.signup-prompt {
+  text-align: center;
+  margin-top: 32px;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.signup-link {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 4px;
+  transition: color 0.2s ease;
+}
+
+.signup-link:hover {
+  color: #4338ca;
+  text-decoration: underline;
+}
