@@ -41,8 +41,8 @@ const Home = () => {
           </div>
 
           <h1 className="main-title">
-            Stop buying,<br />
-            <span className="title-gradient">start sharing.</span>
+            -Stop buying-<br />
+            <span className="title-gradient">Start sharing</span>
           </h1>
 
           <p className="hero-description">
