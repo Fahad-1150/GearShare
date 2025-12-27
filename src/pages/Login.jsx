@@ -49,7 +49,7 @@ const Login = ({ onNavigate }) => {
             <input type="checkbox" id="remember" className="checkbox-input" />
             <label htmlFor="remember" className="checkbox-label">Remember me</label>
           </div>
-          <a href="#" className="forgot-link">Forgot password?</a>
+          <a href="#/forgot-password" className="forgot-link"> Forgot password? </a>
         </div>
 
         <Button type="submit" variant="dark" size="lg" className="submit-button" isLoading={isLoading}>

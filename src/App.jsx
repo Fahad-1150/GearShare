@@ -3,6 +3,7 @@ import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
 import './App.css';
 
 const App = () => {
@@ -36,6 +37,8 @@ const App = () => {
         return <Login onNavigate={navigateTo} />;
       case '/signup':
         return <Signup onNavigate={navigateTo} />;
+      case '/forgot-password':
+        return <ForgotPassword onNavigate={navigateTo} />;
       default:
         return (
           <MainLayout onNavigate={navigateTo}>
