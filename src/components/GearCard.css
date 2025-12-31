@@ -171,3 +171,54 @@
 .card-action:hover .action-icon {
   transform: translateX(2px);
 }
+
+/* --- Updated Availability Badge --- */
+.status-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  padding: 6px 12px; /* Slightly more padding for the date */
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(8px); /* Higher blur for better legibility */
+  white-space: nowrap;
+  z-index: 5;
+}
+
+.status-badge.available {
+  background: rgba(22, 163, 74, 0.9); /* Darker green for contrast */
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.status-badge.booked {
+  background: rgba(31, 41, 55, 0.9); /* Dark slate for booked items */
+  color: #fca5a5; /* Light red/pink text */
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.available .status-dot {
+  background-color: #4ade80;
+  box-shadow: 0 0 10px #4ade80;
+  animation: pulse 2s infinite;
+}
+
+.booked .status-dot {
+  background-color: #f43f5e;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}

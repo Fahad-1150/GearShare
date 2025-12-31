@@ -1,0 +1,450 @@
+/* Navigation */
+.details-nav {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 0;
+}
+
+.back-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    color: #4f46e5;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.2s;
+}
+
+.back-link:hover {
+    transform: translateX(-5px);
+}
+
+/* Main Layout */
+.product-container {
+    
+    padding: 2rem 1.5rem 4rem;
+}
+
+.lender-container {
+   
+    max-width: 80rem;
+    margin: 0 auto;
+}
+
+.lender-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+}
+
+/* Image Side */
+.image-wrapper {
+    position: relative;
+    border-radius: 2.5rem;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.main-gear-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.image-wrapper:hover .main-gear-img {
+    transform: scale(1.03);
+}
+
+.stat-card {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-amount {
+    
+ position: auto;
+  top: 1px;
+  right: 1px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  display: flex;
+ 
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Specs Grid */
+.specs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.spec-item {
+    background: #f8fafc;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    border: 1px solid #f1f5f9;
+}
+
+.spec-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #94a3b8;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+}
+
+.spec-value {
+    font-weight: 700;
+    color: #334155;
+    font-size: 0.95rem;
+}
+
+/* Text & Sticky Side */
+.sticky-details {
+    position: sticky;
+    top: 2rem;
+}
+
+.section-label {
+    color: #4f46e5;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.875rem;
+}
+
+.section-heading {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: #111827;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.section-text {
+    color: #4b5563;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+/* Price Card */
+.price-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+}
+
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px dashed #e5e7eb;
+}
+
+.price-value {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #111827;
+}
+
+.price-label {
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.btn-primary.booking {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.1rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary.booking:hover:not(.disabled) {
+    background: #4338ca;
+}
+
+.btn-primary.booking.disabled {
+    background: #e5e7eb;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.booked-message {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #ef4444;
+    margin-top: 1rem;
+    font-weight: 600;
+}
+
+.benefit-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #059669;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+/* Map Section Area */
+.map-section-area {
+    background: #f8fafc;
+    padding: 5rem 0;
+}
+
+.grid-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.grid-subtitle {
+    color: #6b7280;
+}
+
+.map-container-wrapper {
+    width: 60%;
+    height: 400px;
+    border-radius: 2rem;
+    overflow: hidden;
+    margin-top: 2rem;
+    margin-left: auto; /* Replaced fixed 31rem with auto for better responsiveness */
+    border: 1px solid #e5e7eb;
+}
+
+.map-iframe {
+    width: 100%;
+    height: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .lender-grid {
+        grid-template-columns: 1fr;
+    }
+    .sticky-details {
+        position: static;
+    }
+    .map-container-wrapper {
+        width: 100%;
+    }
+    .section-heading {
+        font-size: 2.2rem;
+    }
+}
+/* Existing Booking Button Tweaks */
+.btn-primary.booking {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.1rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+/* Wishlist Button Styles */
+.wishlist-btn {
+    width: 100%;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem;
+    border-radius: 0.75rem;
+    background: white;
+    color: #4f46e5;
+    border: 2px solid #e0e7ff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.wishlist-btn:hover {
+    background: #f5f7ff;
+    border-color: #4f46e5;
+}
+
+.wishlist-btn svg {
+    transition: transform 0.2s ease;
+}
+
+.wishlist-btn:hover svg {
+    transform: scale(1.1);
+    fill: #4f46e5; /* Makes the heart icon fill in on hover */
+}
+
+/* Updated Booked Message spacing */
+.booked-message {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+/* Reviews Section */
+.reviews-section {
+    padding: 4rem 1.5rem;
+    background: #ffffff;
+}
+
+.reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.rating-summary {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.big-rating {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.total-count {
+    color: #64748b;
+    font-weight: 600;
+}
+
+/* Grid & Card Styling */
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.review-card {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+    border: 1px solid #e2e8f0;
+}
+
+.rev-user-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.rev-avatar {
+    width: 40px;
+    height: 40px;
+    background: #4f46e5;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.rev-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.rev-date {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+.rev-stars {
+    margin-left: auto;
+    color: #f59e0b;
+    letter-spacing: 2px;
+}
+
+.rev-comment {
+    color: #475569;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.no-reviews {
+    color: #94a3b8;
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Button Styling */
+.show-all-btn {
+   
+    display: block;
+    margin: 2rem auto 0;
+    padding: 0.6rem 1.5rem;
+    background: rgb(0, 0, 0);
+    border: 1px solid #cbd5e1;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.show-all-btn:hover {
+    background-color: #4f46e5;
+    border-color: #4f46e5;
+    color: #29274a;
+}
