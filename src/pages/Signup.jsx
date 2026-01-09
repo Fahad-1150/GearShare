@@ -4,15 +4,29 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import './Signup.css';
 
-const Signup = ({ onNavigate }) => {
+const Signup = ({ onNavigate, onSignup }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      onNavigate('/');
+      // Create user object with signup data
+      const user = {
+        name: fullName,
+        email: email,
+        location: 'Feni, Bangladesh',
+        memberSince: 'January 2024',
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+        rating: 0,
+        reviews: 0,
+        totalRents: 0,
+      };
+      onSignup(user);
     }, 1200);
   };
 
@@ -27,9 +41,9 @@ const Signup = ({ onNavigate }) => {
       author="Amin Vai"
     >
       <form onSubmit={handleSubmit} className="auth-form">
-        <Input label="Full Name" placeholder="Nazmul Haque Fahad" required />
-        <Input label="Email" type="email" placeholder="fahad@example.com" required />
-        <Input label="Password" type="password" placeholder="••••••••" required />
+        <Input label="Full Name" placeholder="Nazmul Haque Fahad" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+        <Input label="Email" type="email" placeholder="fahad@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Input label="Password" type="password" placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
         
         <div className="info-box">
           <div className="info-icon-wrapper">

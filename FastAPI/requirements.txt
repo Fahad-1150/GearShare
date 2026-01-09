@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+asyncpg
+passlib[bcrypt]
+python-jose
+pydantic

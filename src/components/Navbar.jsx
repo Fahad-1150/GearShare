@@ -2,7 +2,7 @@ import React from 'react';
 import './NavBar.css';
 import logo from '../images/logo.png';
 
-const Navbar = ({ onNavigate }) => {
+const Navbar = ({ onNavigate, isLoggedIn, userName, userData, onLogout }) => {
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -26,18 +26,37 @@ const Navbar = ({ onNavigate }) => {
           </div>
 
           <div className="navbar-actions">
-            <button
-              onClick={() => onNavigate('/login')}
-              className="btn-login"
-            >
-              Log in
-            </button>
-            <button
-              onClick={() => onNavigate('/signup')}
-              className="btn-signup"
-            >
-              Sign up
-            </button>
+            {isLoggedIn ? (
+              <>
+                <button
+                  onClick={() => onNavigate(userData?.role === 'Admin' ? '/admin' : '/dashboard')}
+                  className="nav-link"
+                >
+                  {userName || 'Dashboard'}
+                </button>
+                <button
+                  onClick={onLogout}
+                  className="btn-login"
+                >
+                  Log out
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => onNavigate('/login')}
+                  className="btn-login"
+                >
+                  Log in
+                </button>
+                <button
+                  onClick={() => onNavigate('/signup')}
+                  className="btn-signup"
+                >
+                  Sign up
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

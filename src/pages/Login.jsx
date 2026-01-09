@@ -3,15 +3,47 @@ import AuthLayout from '../layouts/AuthLayout';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import './Login.css';
-const Login = ({ onNavigate }) => {
+const Login = ({ onNavigate, onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      onNavigate('/');
+      
+      // Check for Admin Credentials
+      if (email.trim().toLowerCase() === 'admin@gmail.com' && password === '12345678') {
+        const adminUser = {
+          name: 'System Admin',
+          email: email,
+          role: 'Admin',
+          location: 'HQ',
+          memberSince: 'January 2023',
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Admin`,
+          rating: 5.0,
+          reviews: 0,
+          totalRents: 0,
+        };
+        onLogin(adminUser);
+        return;
+      }
+
+      // Create user object with login data
+      const user = {
+        name: email.split('@')[0],
+        email: email,
+        role: 'User',
+        location: 'Feni, Bangladesh',
+        memberSince: 'January 2024',
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+        rating: 4.9,
+        reviews: 124,
+        totalRents: 45,
+      };
+      onLogin(user);
     }, 1200);
   };
 
@@ -40,9 +72,13 @@ const Login = ({ onNavigate }) => {
         <span className="divider-text">Or login with email</span>
       </div>
 
+      <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#6b7280', marginBottom: '1rem', background: '#f3f4f6', padding: '0.5rem', borderRadius: '6px' }}>
+        <p style={{ margin: 0 }}><strong>Admin Demo:</strong> admin@gmail.com / 12345678</p>
+      </div>
+
       <form onSubmit={handleSubmit} className="auth-form-stack">
-        <Input label="Email" type="email" placeholder="name@company.com" required />
-        <Input label="Password" type="password" placeholder="••••••••" required />
+        <Input label="Email" type="email" placeholder="name@company.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Input label="Password" type="password" placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
         
         <div className="form-utilities">
           <div className="remember-group">
