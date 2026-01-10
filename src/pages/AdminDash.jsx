@@ -1,18 +1,51 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './AdminDash.css';
 import Footer from '../components/Footer';
 
 const AdminDash = ({ userData, onNavigate }) => {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [reportType, setReportType] = useState('rental');
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [generatingReport, setGeneratingReport] = useState(false);
+
   const stats = [
-    { label: 'Total Users', value: 1024 },
-    { label: 'Total Listings', value: 254 },
-    { label: 'Active Rentals', value: 87 },
-    { label: 'Reports', value: 7 }
+    { label: 'Total Users', value: 1024, path: '/admin/users' },
+    { label: 'Total Listings', value: 254, path: '/admin/listings' },
+    { label: 'Active Rentals', value: 87, path: '/admin/rentals' },
+    { label: 'Reports', value: 7, path: '/admin/reports' },
+    
   ];
 
-  const handleStatClick = (label) => {
-    if (label === 'Total Users') onNavigate('/admin/users');
-    if (label === 'Total Listings') onNavigate('/admin/listings');
+  // Sample rental history data
+  const rentalHistory = [
+    { id: 'R001', user: 'John Doe', item: 'Canon EOS R5', startDate: '2026-01-01', endDate: '2026-01-05', status: 'Completed', amount: '$150' },
+    { id: 'R002', user: 'Jane Smith', item: 'DJI Mavic 3', startDate: '2026-01-03', endDate: '2026-01-07', status: 'Active', amount: '$200' },
+    { id: 'R003', user: 'Mike Johnson', item: 'Sony A7 IV', startDate: '2026-01-02', endDate: '2026-01-04', status: 'Completed', amount: '$120' },
+    { id: 'R004', user: 'Sarah Wilson', item: 'GoPro Hero 12', startDate: '2026-01-05', endDate: '2026-01-08', status: 'Active', amount: '$80' },
+    { id: 'R005', user: 'Tom Brown', item: 'Rode Wireless GO II', startDate: '2025-12-28', endDate: '2026-01-02', status: 'Completed', amount: '$50' },
+    { id: 'R006', user: 'Emily Davis', item: 'Zhiyun Crane 3S', startDate: '2026-01-06', endDate: '2026-01-10', status: 'Pending', amount: '$90' },
+  ];
+
+  const handleStatClick = (path) => {
+    onNavigate(path);
+  };
+
+  const handleGenerateReport = () => {
+    setGeneratingReport(true);
+    // Simulate report generation
+    setTimeout(() => {
+      setGeneratingReport(false);
+      alert(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} report generated successfully!`);
+    }, 1500);
+  };
+
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'Completed': return 'status-completed';
+      case 'Active': return 'status-active';
+      case 'Pending': return 'status-pending';
+      default: return '';
+    }
   };
 
   return (
@@ -27,11 +60,11 @@ const AdminDash = ({ userData, onNavigate }) => {
         {stats.map((s) => (
           <div
             key={s.label}
-            className={`admin-stat ${['Total Users','Total Listings'].includes(s.label) ? 'clickable' : ''}`}
-            onClick={() => ['Total Users','Total Listings'].includes(s.label) && handleStatClick(s.label)}
-            role={['Total Users','Total Listings'].includes(s.label) ? 'button' : undefined}
-            tabIndex={['Total Users','Total Listings'].includes(s.label) ? 0 : undefined}
-            onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && ['Total Users','Total Listings'].includes(s.label)) handleStatClick(s.label); }}
+            className="admin-stat clickable"
+            onClick={() => handleStatClick(s.path)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleStatClick(s.path); }}
           >
             <div className="stat-value">{s.value}</div>
             <div className="stat-label">{s.label}</div>
@@ -39,15 +72,17 @@ const AdminDash = ({ userData, onNavigate }) => {
         ))}
       </div>
 
-      <div className="admin-actions">
-        <button className="btn" onClick={() => onNavigate('/dashboard')}>Open User View</button>
-      </div>
+      
+
+      
+
+      {/* Tab Content */}
+      
+     
     </div>
 
   <Footer/>
    </div>
-
-    
   );
 };
 

@@ -8,6 +8,8 @@ import UserDash from './pages/UserDash';
 import AdminDash from './pages/AdminDash';
 import TotalUser from './pages/TotalUser';
 import TotalListings from './pages/TotalListings';
+import ActiveRentals from './pages/ActiveRentals';
+import UserReports from './pages/UserReports';
 import GearDetails from './pages/GearDetails';
 import './App.css';
 
@@ -131,9 +133,33 @@ const App = () => {
           </MainLayout>
         );
 
+      case '/admin/rentals':
+        if (!isLoggedIn) {
+          navigateTo('/login');
+          return null;
+        }
+        if (userData?.role !== 'Admin') {
+          navigateTo('/dashboard');
+          return null;
+        }
         return (
           <MainLayout onNavigate={navigateTo} isLoggedIn={isLoggedIn} userName={userData?.name} userData={userData} onLogout={handleLogout}>
-            <Home />
+            <ActiveRentals userData={userData} onNavigate={navigateTo} />
+          </MainLayout>
+        );
+
+      case '/admin/reports':
+        if (!isLoggedIn) {
+          navigateTo('/login');
+          return null;
+        }
+        if (userData?.role !== 'Admin') {
+          navigateTo('/dashboard');
+          return null;
+        }
+        return (
+          <MainLayout onNavigate={navigateTo} isLoggedIn={isLoggedIn} userName={userData?.name} userData={userData} onLogout={handleLogout}>
+            <UserReports userData={userData} onNavigate={navigateTo} />
           </MainLayout>
         );
 

@@ -6,6 +6,9 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
   const [activeTab, setActiveTab] = useState('equipments');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [reportType, setReportType] = useState('rental');
+  const [dateRange, setDateRange] = useState({ start: '2026-01-01', end: '2026-01-09' });
+  const [generatingReport, setGeneratingReport] = useState(false);
   const [localUserData, setLocalUserData] = useState(passedUserData || {
     name: 'Bapon Das',
     email: 'bapon@gearshare.com',
@@ -20,7 +23,10 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
   const userData = passedUserData || localUserData;
 
   const [rentalView, setRentalView] = useState('taken');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
+  // Mock data for rental history
   const rentalHistory = [
     {
       id: 1,
@@ -30,6 +36,7 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
       rentDate: '15 Dec 2024',
       returnDate: '20 Dec 2024',
       status: 'completed',
+      rentTo: 'John Smith',
       role: 'taken',
     },
     {
@@ -40,6 +47,7 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
       rentDate: '10 Jan 2025',
       returnDate: 'Expected 15 Jan 2025',
       status: 'in rent',
+      rentTo: 'Sarah Johnson',
       role: 'taken',
     },
     {
@@ -50,6 +58,62 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
       rentDate: '05 Jan 2025',
       returnDate: '12 Jan 2025',
       status: 'pending',
+      rentTo: 'Mike Chen',
+      role: 'given',
+    },
+    {
+      id: 4,
+      itemName: 'Canon EOS R5',
+      category: 'Photography',
+      price: 2500,
+      rentDate: '01 Jan 2025',
+      returnDate: '07 Jan 2025',
+      status: 'completed',
+      rentTo: 'Emily Davis',
+      role: 'given',
+    },
+    {
+      id: 5,
+      itemName: 'GoPro Hero 12',
+      category: 'Action Camera',
+      price: 500,
+      rentDate: '08 Jan 2025',
+      returnDate: 'Expected 12 Jan 2025',
+      status: 'in rent',
+      rentTo: 'Alex Turner',
+      role: 'taken',
+    },
+    {
+      id: 6,
+      itemName: 'Rode Wireless Pro',
+      category: 'Audio',
+      price: 350,
+      rentDate: '03 Jan 2025',
+      returnDate: '06 Jan 2025',
+      status: 'completed',
+      rentTo: 'Lisa Wong',
+      role: 'given',
+    },
+    {
+      id: 7,
+      itemName: 'DJI RS 3 Pro Gimbal',
+      category: 'Stabilizer',
+      price: 800,
+      rentDate: '09 Jan 2025',
+      returnDate: 'Expected 14 Jan 2025',
+      status: 'pending',
+      rentTo: 'David Brown',
+      role: 'taken',
+    },
+    {
+      id: 8,
+      itemName: 'Aputure 600d Pro',
+      category: 'Lighting',
+      price: 1500,
+      rentDate: '02 Jan 2025',
+      returnDate: '05 Jan 2025',
+      status: 'completed',
+      rentTo: 'Rachel Green',
       role: 'given',
     },
   ];
@@ -124,6 +188,28 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
     { label: 'Member Since', value: 'Jan 2024' },
   ];
 
+  const getStatusClass = (status) => {
+    switch(status.toLowerCase()) {
+      case 'completed':
+      case 'active':
+        return 'status-completed';
+      case 'pending':
+        return 'status-pending';
+      case 'in rent':
+        return 'status-active';
+      default:
+        return '';
+    }
+  };
+
+  const handleGenerateReport = () => {
+    setGeneratingReport(true);
+    setTimeout(() => {
+      setGeneratingReport(false);
+      alert(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report generated for ${dateRange.start} to ${dateRange.end}`);
+    }, 2000);
+  };
+
   return (
     <div className="dashboard-wrapper">
       {/* Header Section */}
@@ -195,11 +281,24 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
         >
           My Equipments
         </button>
+      
         <button
-          className={`tab-button ${activeTab === 'rentals' ? 'active' : ''}`}
-          onClick={() => setActiveTab('rentals')}
+          className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveTab('overview')}
         >
-          Rental History
+          Dashboard Overview
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          My Analytics
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'reports' ? 'active' : ''}`}
+          onClick={() => setActiveTab('reports')}
+        >
+          My Reports
         </button>
       </div>
 
@@ -259,6 +358,229 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="admin-section">
+            <h2>Your Dashboard Overview</h2>
+            <p className="section-desc">View your personal statistics and rental activity at a glance.</p>
+            <div className="overview-grid">
+              <div className="overview-card">
+                <div className="overview-icon">💰</div>
+                <div className="overview-info">
+                  <span className="overview-label">Total Earnings</span>
+                  <span className="overview-value">৳{listedItems.reduce((sum, item) => sum + (item.price * item.rents), 0)}</span>
+                </div>
+              </div>
+              <div className="overview-card">
+                <div className="overview-icon">📦</div>
+                <div className="overview-info">
+                  <span className="overview-label">Items Listed</span>
+                  <span className="overview-value">{listedItems.length}</span>
+                </div>
+              </div>
+              <div className="overview-card">
+                <div className="overview-icon">⭐</div>
+                <div className="overview-info">
+                  <span className="overview-label">Your Rating</span>
+                  <span className="overview-value">{userData.rating}</span>
+                </div>
+              </div>
+              <div className="overview-card">
+                <div className="overview-icon">🔄</div>
+                <div className="overview-info">
+                  <span className="overview-label">Total Rentals</span>
+                  <span className="overview-value">{userData.totalRents}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div className="admin-section">
+            <h2>My Rental Analytics</h2>
+            <p className="section-desc">Detailed view of your rental transactions and performance metrics.</p>
+            
+            <div className="history-filters">
+              <input 
+                type="text" 
+                placeholder="Search by item name..." 
+                className="search-input"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <select 
+                className="filter-select"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All Status</option>
+                <option value="in rent">In Rent</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+
+            <div className="table-container">
+              <table className="rental-table">
+                <thead>
+                  <tr>
+                    <th>Rental ID</th>
+                    <th>Item</th>
+                    <th>Category</th>
+                    <th>Rent To</th>
+                    <th>Rent Date</th>
+                    <th>Return Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rentalHistory
+                    .filter((rental) => {
+                      const matchesStatus = statusFilter === 'all' || rental.status.toLowerCase() === statusFilter.toLowerCase();
+                      const matchesSearch = rental.itemName.toLowerCase().includes(searchTerm.toLowerCase());
+                      return matchesStatus && matchesSearch;
+                    })
+                    .map((rental) => (
+                    <tr key={rental.id}>
+                      <td><span className="rental-id">{rental.id}</span></td>
+                      <td>{rental.itemName}</td>
+                      <td>{rental.category}</td>
+                      <td>{rental.rentTo}</td>
+                      <td>{rental.rentDate}</td>
+                      <td>{rental.returnDate}</td>
+                      <td><strong>৳{rental.price}</strong></td>
+                      <td className={`status-text ${getStatusClass(rental.status)}`}>{rental.status}</td>
+                      <td>
+                        <button className="action-btn view-btn">View</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Reports Tab */}
+        {activeTab === 'reports' && (
+          <div className="admin-section">
+            <h2>Generate Personal Reports</h2>
+            <p className="section-desc">Create detailed reports for your rental activity and earnings analysis.</p>
+
+            <div className="report-generator">
+              <div className="report-options">
+                <div className="report-type-selector">
+                  <h3>Report Type</h3>
+                  <div className="report-types">
+                    <label className={`report-type-card ${reportType === 'rental' ? 'selected' : ''}`}>
+                      <input
+                        type="radio"
+                        name="reportType"
+                        value="rental"
+                        checked={reportType === 'rental'}
+                        onChange={(e) => setReportType(e.target.value)}
+                      />
+                      <span className="report-icon">📋</span>
+                      <span className="report-name">Rental Report</span>
+                      <span className="report-desc">Your rental transactions</span>
+                    </label>
+                    <label className={`report-type-card ${reportType === 'revenue' ? 'selected' : ''}`}>
+                      <input
+                        type="radio"
+                        name="reportType"
+                        value="revenue"
+                        checked={reportType === 'revenue'}
+                        onChange={(e) => setReportType(e.target.value)}
+                      />
+                      <span className="report-icon">💰</span>
+                      <span className="report-name">Earnings Report</span>
+                      <span className="report-desc">Your total earnings & income</span>
+                    </label>
+                    <label className={`report-type-card ${reportType === 'user' ? 'selected' : ''}`}>
+                      <input
+                        type="radio"
+                        name="reportType"
+                        value="user"
+                        checked={reportType === 'user'}
+                        onChange={(e) => setReportType(e.target.value)}
+                      />
+                      <span className="report-icon">📊</span>
+                      <span className="report-name">Performance Report</span>
+                      <span className="report-desc">Your ratings & reviews</span>
+                    </label>
+                    <label className={`report-type-card ${reportType === 'listing' ? 'selected' : ''}`}>
+                      <input
+                        type="radio"
+                        name="reportType"
+                        value="listing"
+                        checked={reportType === 'listing'}
+                        onChange={(e) => setReportType(e.target.value)}
+                      />
+                      <span className="report-icon">📦</span>
+                      <span className="report-name">Listing Report</span>
+                      <span className="report-desc">Your item performance</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="date-range-selector">
+                  <h3>Date Range</h3>
+                  <div className="date-inputs">
+                    <div className="date-field">
+                      <label>Start Date</label>
+                      <input
+                        type="date"
+                        value={dateRange.start}
+                        onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                      />
+                    </div>
+                    <div className="date-field">
+                      <label>End Date</label>
+                      <input
+                        type="date"
+                        value={dateRange.end}
+                        onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="quick-ranges">
+                    <button onClick={() => setDateRange({ start: '2026-01-01', end: '2026-01-09' })}>This Week</button>
+                    <button onClick={() => setDateRange({ start: '2026-01-01', end: '2026-01-31' })}>This Month</button>
+                    <button onClick={() => setDateRange({ start: '2025-10-01', end: '2025-12-31' })}>Last Quarter</button>
+                    <button onClick={() => setDateRange({ start: '2025-01-01', end: '2025-12-31' })}>Last Year</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="report-actions">
+                <button 
+                  className="btn generate-btn" 
+                  onClick={handleGenerateReport}
+                  disabled={generatingReport}
+                >
+                  {generatingReport ? (
+                    <>
+                      <span className="spinner"></span> Generating...
+                    </>
+                  ) : (
+                    <>📊 Generate Report</>
+                  )}
+                </button>
+                <button className="btn btn-outline">
+                  📥 Export as CSV
+                </button>
+                <button className="btn btn-outline">
+                  📄 Export as PDF
+                </button>
+              </div>
             </div>
           </div>
         )}
