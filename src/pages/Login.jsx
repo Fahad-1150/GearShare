@@ -33,11 +33,24 @@ const Login = ({ onNavigate, onLogin }) => {
         };
         onLogin(user);
       } else {
-        const error = await response.json();
-        alert(error.detail || 'Login failed');
+        try {
+          const error = await response.json();
+          let errorMessage = 'Login failed';
+          if (error.detail) {
+            if (Array.isArray(error.detail)) {
+              errorMessage = error.detail.map(err => err.msg || err.message || JSON.stringify(err)).join(', ');
+            } else {
+              errorMessage = error.detail;
+            }
+          }
+          alert(errorMessage);
+        } catch (e) {
+          alert(`Server error: ${response.status}`);
+        }
       }
     } catch (error) {
-      alert('Network error. Please try again.');
+      console.error('Login error:', error);
+      alert(`Network error: ${error.message || 'Unable to connect to server. Make sure FastAPI is running on http://127.0.0.1:8000'}`);
     } finally {
       setIsLoading(false);
     }

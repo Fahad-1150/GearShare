@@ -31,16 +31,25 @@ async def signup(user: UserRegister, db: AsyncSession = Depends(get_db)):
     await db.commit()
     await db.refresh(new_user)
 
+    token = create_access_token({
+        "sub": new_user.UserName_PK,
+        "role": new_user.Role
+    })
+
     return {
         "message": "User registered successfully",
+        "token": token,
         "user": {
-            "username": new_user.UserName_PK,
-            "email": new_user.Email
+            "UserName_PK": new_user.UserName_PK,
+            "Email": new_user.Email,
+            "Role": new_user.Role,
+            "Location": new_user.Location,
+            "CreatedAt": new_user.CreatedAt.isoformat() if new_user.CreatedAt else None
         }
     }
 
 # LOGIN
-@router.post("/login", response_model=Token)
+@router.post("/login")
 async def login(user: UserLogin, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(User).where(User.Email == user.email)
@@ -51,7 +60,7 @@ async def login(user: UserLogin, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid user")
 
     if not verify_password(user.password, db_user.Password):
-        raise HTTPException(status_code=401, detail="Invalid pass")
+        raise HTTPException(status_code=401, detail="Invalid password")
 
     token = create_access_token({
         "sub": db_user.UserName_PK,
@@ -60,5 +69,12 @@ async def login(user: UserLogin, db: AsyncSession = Depends(get_db)):
 
     return {
         "access_token": token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "user": {
+            "UserName_PK": db_user.UserName_PK,
+            "Email": db_user.Email,
+            "Role": db_user.Role,
+            "Location": db_user.Location,
+            "CreatedAt": db_user.CreatedAt.isoformat() if db_user.CreatedAt else None
+        }
     }

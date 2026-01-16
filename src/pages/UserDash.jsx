@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './UserDash.css';
 import GearCard from '../components/GearCard.jsx';
+import EquipmentForm from '../components/EquipmentForm';
+import { apiRequest } from '../utils/api';
+import '../components/EquipmentForm.css';
 
 function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
   const [activeTab, setActiveTab] = useState('equipments');
@@ -21,10 +24,40 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
   });
 
   const userData = passedUserData || localUserData;
+  // Use UserName_PK from API or name from mock data
+  const currentUsername = userData.UserName_PK || userData.name;
 
   const [rentalView, setRentalView] = useState('taken');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showEquipmentForm, setShowEquipmentForm] = useState(false);
+  const [editingEquipment, setEditingEquipment] = useState(null);
+  const [userEquipment, setUserEquipment] = useState([]);
+  const [equipmentLoading, setEquipmentLoading] = useState(false);
+
+  // Fetch user equipment on component mount
+  useEffect(() => {
+    const fetchUserEquipment = async () => {
+      setEquipmentLoading(true);
+      try {
+        const response = await apiRequest(`/equipment/owner/${currentUsername}`, {
+          method: 'GET'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUserEquipment(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user equipment:', error);
+      } finally {
+        setEquipmentLoading(false);
+      }
+    };
+
+    if (currentUsername) {
+      fetchUserEquipment();
+    }
+  }, [currentUsername]);
 
   // Mock data for rental history
   const rentalHistory = [
@@ -160,6 +193,57 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
     setIsEditingProfile(false);
   };
 
+  const handleAddEquipment = () => {
+    setEditingEquipment(null);
+    setShowEquipmentForm(true);
+  };
+
+  const handleEditEquipment = (item) => {
+    setEditingEquipment(item);
+    setShowEquipmentForm(true);
+  };
+
+  const handleDeleteEquipment = async (equipmentId) => {
+    if (window.confirm('Are you sure you want to delete this equipment?')) {
+      try {
+        const response = await apiRequest(`/equipment/${equipmentId}`, {
+          method: 'DELETE',
+          headers: { 'owner_username': currentUsername }
+        });
+        if (response.ok) {
+          setUserEquipment(userEquipment.filter(item => item.equipment_id !== equipmentId));
+          alert('Equipment deleted successfully!');
+        } else {
+          alert('Failed to delete equipment');
+        }
+      } catch (error) {
+        console.error('Failed to delete equipment:', error);
+        alert('Network error. Please try again.');
+      }
+    }
+  };
+
+  const handleEquipmentFormClose = () => {
+    setShowEquipmentForm(false);
+    setEditingEquipment(null);
+  };
+
+  const handleEquipmentFormSave = async () => {
+    // Refresh equipment list
+    try {
+      const response = await apiRequest(`/equipment/owner/${currentUsername}`, {
+        method: 'GET'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUserEquipment(data);
+      }
+    } catch (error) {
+      console.error('Failed to refresh equipment:', error);
+    }
+    handleEquipmentFormClose();
+  };
+
   const handleEditItem = (item) => {
     setEditingItem({ ...item });
   };
@@ -218,7 +302,7 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
           <div className="user-profile-card">
             <img src={userData.avatar} alt={userData.name} className="user-avatar" />
             <div className="user-info">
-              <h1 className="user-name">{userData.name}</h1>
+              <h1 className="user-name">{currentUsername}</h1>
               <p className="user-email">{userData.email}</p>
               <p className="user-location">📍 {userData.location}</p>
             </div>
@@ -309,19 +393,40 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
           <div className="listings-section">
             <div className="listings-header">
               <div className="section-title">My Equipments</div>
-              <button className="add-listing-btn">+ Add Equipment</button>
+              <button className="add-listing-btn" onClick={handleAddEquipment}>+ Add Equipment</button>
             </div>
-            <div className="listings-grid card-grid">
-              {listedItems.map((item) => (
-                <div key={item.id} className="card-container">
-                  <GearCard item={{ ...item, isAvailable: item.isAvailable !== false, availableDate: item.availableDate || null, location: item.location || 'Your area' }} />
-                  <div className="card-actions">
-                    <button className="action-btn edit" onClick={() => handleEditItem(item)}>Edit</button>
-                    <button className="action-btn delete" onClick={() => handleDeleteItem(item.id)}>Delete</button>
+            {equipmentLoading ? (
+              <div className="loading">Loading your equipment...</div>
+            ) : userEquipment.length > 0 ? (
+              <div className="listings-grid card-grid">
+                {userEquipment.map((item) => (
+                  <div key={item.equipment_id} className="card-container">
+                    <GearCard item={{
+                      id: item.equipment_id,
+                      name: item.name,
+                      category: item.category,
+                      price: parseFloat(item.daily_price),
+                      rating: parseFloat(item.rating_avg) || 0,
+                      reviews: item.rating_count || 0,
+                      image: item.photo_binary ? `data:image/jpeg;base64,${item.photo_binary}` : (item.photo_url || 'https://via.placeholder.com/300x200?text=No+Image'),
+                      owner: item.owner_username,
+                      location: item.pickup_location || 'Location not specified',
+                      isAvailable: item.status === 'available',
+                      availableDate: item.booked_till
+                    }} />
+                    <div className="card-actions">
+                      <button className="action-btn edit" onClick={() => handleEditEquipment(item)}>Edit</button>
+                      <button className="action-btn delete" onClick={() => handleDeleteEquipment(item.equipment_id)}>Delete</button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-equipment">
+                <p>You haven't added any equipment yet. Start sharing your gear!</p>
+                <button className="add-listing-btn" onClick={handleAddEquipment}>+ Add Your First Equipment</button>
+              </div>
+            )}
           </div>
         )}
 
@@ -668,6 +773,16 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Equipment Form Modal */}
+        {showEquipmentForm && (
+          <EquipmentForm
+            item={editingEquipment}
+            userName={currentUsername}
+            onClose={handleEquipmentFormClose}
+            onSave={handleEquipmentFormSave}
+          />
         )}
       </div>
     </div>

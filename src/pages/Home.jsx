@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import GearCard from '../components/GearCard';
 import GearDetails from './GearDetails'; 
+import { apiRequest } from '../utils/api';
 import './home.css';
 import logo from '../images/logo.png';
 
@@ -89,9 +90,54 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGear, setSelectedGear] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
+  const [equipment, setEquipment] = useState(MOCK_GEAR);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch equipment from API
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      setLoading(true);
+      try {
+        const response = await apiRequest('/equipment/', {
+          method: 'GET'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // Map API data to match GearCard format
+          const mappedData = data.map(item => ({
+            id: item.equipment_id,
+            name: item.name,
+            category: item.category,
+            price: parseFloat(item.daily_price),
+            rating: parseFloat(item.rating_avg) || 0,
+            reviews: item.rating_count || 0,
+            image: item.photo_url || "https://via.placeholder.com/300x200?text=No+Image",
+            owner: item.owner_username,
+            ownerId: `OWN-${item.equipment_id}`,
+            location: item.pickup_location || "Location not specified",
+            isAvailable: item.status === 'available',
+            availableDate: item.booked_till,
+            reviewsData: []
+          }));
+          setEquipment(mappedData);
+        } else {
+          // Fallback to mock data if API fails
+          setEquipment(MOCK_GEAR);
+        }
+      } catch (error) {
+        console.error('Failed to fetch equipment:', error);
+        // Fallback to mock data on error
+        setEquipment(MOCK_GEAR);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEquipment();
+  }, []);
 
   // Filtering Logic
-  const filteredGear = MOCK_GEAR.filter(item => {
+  const filteredGear = equipment.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
     return matchesSearch && matchesCategory;

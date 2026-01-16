@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, TIMESTAMP, text
+from sqlalchemy import Column, String, Boolean, TIMESTAMP, text, Integer, Numeric, Date, ForeignKey
 from .database import Base
 
 class User(Base):
@@ -46,3 +46,78 @@ class User(Base):
         TIMESTAMP,
         server_default=text("CURRENT_TIMESTAMP")
     )
+
+
+class Equipment(Base):
+    __tablename__ = "equipment"
+
+    equipment_id = Column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    name = Column(
+        String(150),
+        nullable=False
+    )
+
+    photo_url = Column(
+        String(500)
+    )
+
+    photo_binary = Column(
+        String
+    )
+
+    owner_username = Column(
+        String(255),
+        ForeignKey("User.UserName_PK", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    category = Column(
+        String(100),
+        index=True
+    )
+
+    daily_price = Column(
+        Numeric(10, 2),
+        nullable=False
+    )
+
+    status = Column(
+        String(20),
+        server_default=text("'available'"),
+        index=True
+    )
+
+    booked_till = Column(
+        Date
+    )
+
+    pickup_location = Column(
+        String(255)
+    )
+
+    rating_avg = Column(
+        Numeric(2, 1),
+        server_default=text("0.0")
+    )
+
+    rating_count = Column(
+        Integer,
+        server_default=text("0")
+    )
+
+    created_at = Column(
+        TIMESTAMP,
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    updated_at = Column(
+        TIMESTAMP,
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+

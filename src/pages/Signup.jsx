@@ -19,10 +19,10 @@ const Signup = ({ onNavigate, onSignup }) => {
       const response = await apiRequest('/auth/signup', {
         method: 'POST',
         body: JSON.stringify({
-          UserName_PK: userName,
-          Email: email,
-          Password: password,
-          Location: location,
+          username: userName,
+          email: email,
+          password: password,
+          location: location,
         }),
       });
       if (response.ok) {
@@ -41,11 +41,24 @@ const Signup = ({ onNavigate, onSignup }) => {
         };
         onSignup(user);
       } else {
-        const error = await response.json();
-        alert(error.detail || 'Signup failed');
+        try {
+          const error = await response.json();
+          let errorMessage = 'Signup failed';
+          if (error.detail) {
+            if (Array.isArray(error.detail)) {
+              errorMessage = error.detail.map(err => err.msg || err.message || JSON.stringify(err)).join(', ');
+            } else {
+              errorMessage = error.detail;
+            }
+          }
+          alert(errorMessage);
+        } catch (e) {
+          alert(`Server error: ${response.status}`);
+        }
       }
     } catch (error) {
-      alert('Network error. Please try again.');
+      console.error('Signup error:', error);
+      alert(`Network error: ${error.message || 'Unable to connect to server. Make sure FastAPI is running on http://127.0.0.1:8000'}`);
     } finally {
       setIsLoading(false);
     }
