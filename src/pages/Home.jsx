@@ -4,6 +4,7 @@ import GearDetails from './GearDetails';
 import { apiRequest } from '../utils/api';
 import './home.css';
 import logo from '../images/logo.png';
+import Footer from '../components/Footer';
 
 const MOCK_GEAR = [
   { 
@@ -286,7 +287,7 @@ const Home = () => {
         </div>
       </section>
 
-      
+      <Footer/>
     </div>
   );
 };

@@ -91,12 +91,14 @@
 
 /* Search Bar */
 .search-container {
+  justify-content: center;
   max-width: 52rem;
   margin: 0 auto 5rem;
 }
 
 .search-box {
   position: relative;
+  justify-content: center;
 }
 
 .glow-effect {
@@ -122,6 +124,7 @@
   color: #000000;
   font-size: 1rem;
   font-weight: 500;
+  height: 40px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -156,19 +159,23 @@
 }
 
 .btn-search {
-  background-color: #111827;
-  color: white;
+   background: linear-gradient(to right, #4f46e5, #8b5cf6);
+ 
   padding: 1rem 2.5rem;
   border-radius: 0.75rem;
+  border: 2px #4f46e5;
   font-weight: 800;
   border: none;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 1.1rem;
+  
 }
 
+
 .btn-search:hover {
-  background-color: #000000;
+   transition: all 1s ease;
+  background: linear-gradient(to right, #8b5cf6, #4f46e5);
   transform: scale(1.02);
 }
 

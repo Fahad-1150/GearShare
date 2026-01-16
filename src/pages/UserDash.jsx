@@ -4,6 +4,7 @@ import GearCard from '../components/GearCard.jsx';
 import EquipmentForm from '../components/EquipmentForm';
 import { apiRequest } from '../utils/api';
 import '../components/EquipmentForm.css';
+import Footer from '../components/Footer.jsx'
 
 function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
   const [activeTab, setActiveTab] = useState('equipments');
@@ -796,6 +797,7 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
           />
         )}
       </div>
+       <Footer/>
     </div>
   );
 }

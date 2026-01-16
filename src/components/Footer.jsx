@@ -30,6 +30,9 @@ const Footer = () => {
         <div className="footer-bottom">
           © 2025 GearShare Inc.
         </div>
+        <div>
+          <p>Developed by Nh.Fahad , Bapon Das ,Zubayed Amin</p>
+        </div>
       </div>
     </footer>
     </div>
