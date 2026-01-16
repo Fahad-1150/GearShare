@@ -2,32 +2,53 @@ import React, { useState } from 'react';
 import AuthLayout from '../layouts/AuthLayout';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import { apiRequest } from '../utils/api';
 import './Signup.css';
 
 const Signup = ({ onNavigate, onSignup }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [fullName, setFullName] = useState('');
+  const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [location, setLocation] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await apiRequest('/auth/signup', {
+        method: 'POST',
+        body: JSON.stringify({
+          UserName_PK: userName,
+          Email: email,
+          Password: password,
+          Location: location,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        const user = {
+          name: data.user.UserName_PK,
+          email: data.user.Email,
+          role: data.user.Role,
+          location: data.user.Location,
+          memberSince: new Date(data.user.CreatedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.UserName_PK}`,
+          rating: 0,
+          reviews: 0,
+          totalRents: 0,
+        };
+        onSignup(user);
+      } else {
+        const error = await response.json();
+        alert(error.detail || 'Signup failed');
+      }
+    } catch (error) {
+      alert('Network error. Please try again.');
+    } finally {
       setIsLoading(false);
-      // Create user object with signup data
-      const user = {
-        name: fullName,
-        email: email,
-        location: 'Feni, Bangladesh',
-        memberSince: 'January 2024',
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-        rating: 0,
-        reviews: 0,
-        totalRents: 0,
-      };
-      onSignup(user);
-    }, 1200);
+    }
   };
 
   return (
@@ -41,9 +62,10 @@ const Signup = ({ onNavigate, onSignup }) => {
       author="Amin Vai"
     >
       <form onSubmit={handleSubmit} className="auth-form">
-        <Input label="Full Name" placeholder="Nazmul Haque Fahad" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+        <Input label="Username" placeholder="nazmul_fahad" required value={userName} onChange={(e) => setUserName(e.target.value)} />
         <Input label="Email" type="email" placeholder="fahad@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
         <Input label="Password" type="password" placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Input label="Location" placeholder="Feni, Bangladesh" value={location} onChange={(e) => setLocation(e.target.value)} />
         
         <div className="info-box">
           <div className="info-icon-wrapper">

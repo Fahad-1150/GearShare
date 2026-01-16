@@ -1,6 +1,8 @@
 fastapi
 uvicorn[standard]
-asyncpg
+aiosqlite
 passlib[bcrypt]
 python-jose
 pydantic
+sqlalchemy
+python-dotenv

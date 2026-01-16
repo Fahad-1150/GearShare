@@ -2,49 +2,45 @@ import React, { useState } from 'react';
 import AuthLayout from '../layouts/AuthLayout';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import { apiRequest } from '../utils/api';
 import './Login.css';
 const Login = ({ onNavigate, onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      // Check for Admin Credentials
-      if (email.trim().toLowerCase() === 'admin@gmail.com' && password === '12345678') {
-        const adminUser = {
-          name: 'System Admin',
-          email: email,
-          role: 'Admin',
-          location: 'HQ',
-          memberSince: 'January 2023',
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Admin`,
-          rating: 5.0,
-          reviews: 0,
-          totalRents: 0,
+    try {
+      const response = await apiRequest('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        const user = {
+          name: data.user.UserName_PK,
+          email: data.user.Email,
+          role: data.user.Role,
+          location: data.user.Location,
+          memberSince: new Date(data.user.CreatedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.UserName_PK}`,
+          rating: 4.9,
+          reviews: 124,
+          totalRents: 45,
         };
-        onLogin(adminUser);
-        return;
+        onLogin(user);
+      } else {
+        const error = await response.json();
+        alert(error.detail || 'Login failed');
       }
-
-      // Create user object with login data
-      const user = {
-        name: email.split('@')[0],
-        email: email,
-        role: 'User',
-        location: 'Feni, Bangladesh',
-        memberSince: 'January 2024',
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-        rating: 4.9,
-        reviews: 124,
-        totalRents: 45,
-      };
-      onLogin(user);
-    }, 1200);
+    } catch (error) {
+      alert('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

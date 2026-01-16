@@ -1,8 +1,30 @@
+.stats-row
+{
+
+
+   display: grid;
+   
+
+    grid-template-columns: repeat(auto-fit, minmax(14px, 1fr));
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+
 .user-reports-page {
-  min-height: 100vh;
+  height: auto;
   background-color: #f9fafb;
   padding: 1.5rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  
+   
+  
 }
+
 
 .page-header {
   margin-bottom: 1.5rem;
