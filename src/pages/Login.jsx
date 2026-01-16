@@ -32,6 +32,11 @@ const Login = ({ onNavigate, onLogin }) => {
           totalRents: 45,
         };
         onLogin(user);
+        if (user.role === 'Admin') {
+          onNavigate('/admin');
+        } else {
+          onNavigate('/dashboard');
+        }
       } else {
         try {
           const error = await response.json();

@@ -414,6 +414,17 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
                       isAvailable: item.status === 'available',
                       availableDate: item.booked_till
                     }} />
+                    <div style={{ 
+                      marginTop: '10px', 
+                      padding: '8px', 
+                      background: item.status === 'available' ? '#dcfce7' : '#fee2e2', 
+                      color: item.status === 'available' ? '#166534' : '#991b1b',
+                      borderRadius: '8px',
+                      textAlign: 'center',
+                      fontWeight: '600'
+                    }}>
+                      Status: {item.status ? (item.status.charAt(0).toUpperCase() + item.status.slice(1)) : 'Unknown'}
+                    </div>
                     <div className="card-actions">
                       <button className="action-btn edit" onClick={() => handleEditEquipment(item)}>Edit</button>
                       <button className="action-btn delete" onClick={() => handleDeleteEquipment(item.equipment_id)}>Delete</button>

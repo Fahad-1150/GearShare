@@ -822,10 +822,10 @@ html, body, #root {
 }
 
 .form-input {
-  width: 100%;
+  width: 92%;
   padding: 0.75rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid #010101;
+  border-radius: 10px;
   font-size: 1rem;
   transition: border-color 0.2s;
   font-family: inherit;
@@ -963,21 +963,8 @@ margin-top: auto;
 }
 
 /* Form Styling */
-.form-input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-family: inherit;
-  transition: all 0.2s ease;
-}
 
-.form-input:focus {
-  outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
+
 
 
 

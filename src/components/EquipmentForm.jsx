@@ -121,14 +121,7 @@ const EquipmentForm = ({ item, userName, onClose, onSave }) => {
             required
           />
 
-          <Input
-            label="Photo URL"
-            name="photo_url"
-            type="url"
-            value={formData.photo_url}
-            onChange={handleChange}
-            placeholder="https://example.com/photo.jpg"
-          />
+          
           <div className="form-group">
             <label>Equipment Photo</label>
             <input 

@@ -1,0 +1,87 @@
+/* Base button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border-radius: 1rem; /* rounded-xl */
+  transition: all 0.2s ease;
+  cursor: pointer;
+  
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Variants */
+.btn-primary {
+
+ background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+ 
+  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2); /* shadow-indigo-200 */
+}
+
+.btn-primary:hover {
+  
+   background-color: linear-gradient( #7c3aed 100%,135deg, #4f46e5 0%); /* indigo-700 */
+}
+
+.btn-secondary {
+  background-color: #e0e7ff; /* indigo-100 */
+  color: #3730a3; /* indigo-700 */
+}
+
+.btn-secondary:hover {
+  background-color: linear-gradient( #7c3aed 100%,135deg, #4f46e5 0%); /* indigo-200 */
+}
+
+.btn-outline {
+  border: 2px solid #e5e7eb; /* gray-200 */
+  color: #374151; /* gray-700 */
+}
+
+.btn-outline:hover {
+  background-color: linear-gradient( #7c3aed 100%,135deg, #4f46e5 0%);
+}
+
+.btn-ghost {
+  color: #4b5563; /* gray-600 */
+  background-color: transparent;
+}
+
+.btn-ghost:hover {
+  background-color: linear-gradient( #7c3aed 100%,135deg, #4f46e5 0%); /* gray-50 */
+}
+
+.btn-dark {
+  background-color: #111827; /* gray-900 */
+  color: #fff;
+  box-shadow: 0 4px 6px rgba(156, 163, 175, 0.2); /* shadow-gray-200 */
+}
+
+.btn-dark:hover {
+ background-color: linear-gradient( #7c3aed 100%,135deg, #4f46e5 0%);
+}
+
+/* Sizes */
+.btn-sm { padding: 0.5rem 1rem; font-size: 0.875rem; }
+.btn-md { padding: 0.75rem 1.5rem; font-size: 1rem; }
+.btn-lg { padding: 1rem 2rem; font-size: 1.125rem; }
+.btn-xl { padding: 1.25rem 2.5rem; font-size: 1.25rem; }
+
+/* Loading spinner */
+.btn-spinner {
+  width: 1.25rem; /* 5 units */
+  height: 1.25rem;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

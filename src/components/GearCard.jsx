@@ -53,16 +53,19 @@ const GearCard = ({ item }) => {
             <span className="price-amount">{item.price} TK</span>
             <span className="price-unit">/ day</span>
           </div>
+
+          { item.isAvailable ? 'Available' : 'Not Available'}
           
-          <button 
+          {/*<button 
             className="card-action" 
             disabled={!item.isAvailable}
           >
-            {item.isAvailable ? 'Book Now' : 'Waitlist'}
+           
+            { !item.isAvailable ? 'Book Now' : 'Waitlist'}
             <svg className="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </button>
+          </button>*/}
         </div>
       </div>
     </div>
