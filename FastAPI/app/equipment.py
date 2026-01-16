@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Header, File, UploadFile, Form
 import base64
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 
 from .database import get_db
 from .models import Equipment
@@ -14,9 +14,15 @@ router = APIRouter()
 @router.get("/", response_model=list[EquipmentResponse])
 async def get_all_equipment(
     category: str = None,
+    user: str = None,
     db: AsyncSession = Depends(get_db)
 ):
-    query = select(Equipment).where(Equipment.status != 'unavailable')
+    if user:
+        query = select(Equipment).where(
+            or_(Equipment.status != 'unavailable', Equipment.owner_username == user)
+        )
+    else:
+        query = select(Equipment).where(Equipment.status != 'unavailable')
     
     if category and category != 'All':
         query = query.where(Equipment.category == category)
@@ -89,7 +95,11 @@ async def create_equipment(
 @router.put("/{equipment_id}", response_model=EquipmentResponse)
 async def update_equipment(
     equipment_id: int,
-    equipment_update: EquipmentUpdate,
+    name: str = Form(None),
+    category: str = Form(None),
+    daily_price: float = Form(None),
+    pickup_location: str = Form(None),
+    photo: UploadFile = File(None),
     owner_username: str = Header(..., alias="owner_username"),
     db: AsyncSession = Depends(get_db)
 ):
@@ -104,10 +114,21 @@ async def update_equipment(
     if equipment.owner_username != owner_username:
         raise HTTPException(status_code=403, detail="Not authorized to update this equipment")
     
-    update_data = equipment_update.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(equipment, field, value)
+    if name is not None:
+        equipment.name = name
+    if category is not None:
+        equipment.category = category
+    if daily_price is not None:
+        equipment.daily_price = daily_price
+    if pickup_location is not None:
+        equipment.pickup_location = pickup_location
     
+    if photo:
+        contents = await photo.read()
+        photo_binary_data = base64.b64encode(contents).decode("utf-8")
+        equipment.photo_binary = photo_binary_data
+        equipment.photo_url = None
+
     await db.commit()
     await db.refresh(equipment)
     

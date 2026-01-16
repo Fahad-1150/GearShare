@@ -1,7 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Button from './ui/Button';
 import Input from './ui/Input';
 import { apiRequest } from '../utils/api';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix default marker icon in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+// Leaflet map click handler component
+const ClickHandler = ({ setPosition, name, onChange }) => {
+  useMapEvents({
+    click(e) {
+      const coords = [e.latlng.lat, e.latlng.lng];
+      setPosition(coords);
+      onChange({ target: { name, value: `${coords[0]}, ${coords[1]}` } });
+    },
+  });
+  return null;
+};
 
 const EquipmentForm = ({ item, userName, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -14,6 +37,11 @@ const EquipmentForm = ({ item, userName, onClose, onSave }) => {
   const [photoFile, setPhotoFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [mapPosition, setMapPosition] = useState(
+    item?.pickup_location
+      ? item.pickup_location.split(',').map(Number)
+      : null
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,9 +49,7 @@ const EquipmentForm = ({ item, userName, onClose, onSave }) => {
   };
 
   const handleFileChange = (e) => {
-    if (e.target.files[0]) {
-      setPhotoFile(e.target.files[0]);
-    }
+    if (e.target.files[0]) setPhotoFile(e.target.files[0]);
   };
 
   const handleSubmit = async (e) => {
@@ -32,45 +58,38 @@ const EquipmentForm = ({ item, userName, onClose, onSave }) => {
     setError('');
 
     try {
+      const submitData = new FormData();
+      submitData.append('name', formData.name);
+      submitData.append('category', formData.category);
+      submitData.append('daily_price', formData.daily_price);
+      submitData.append('pickup_location', formData.pickup_location);
+      if (photoFile) submitData.append('photo', photoFile);
+
       if (item?.equipment_id) {
-        // Update equipment
         const response = await apiRequest(`/equipment/${item.equipment_id}`, {
           method: 'PUT',
           headers: { 'owner_username': userName },
-          body: JSON.stringify(formData),
+          body: submitData,
         });
-        
         if (response.ok) {
           alert('Equipment updated successfully!');
           onSave();
         } else {
-          const error = await response.json();
-          setError(error.detail || 'Failed to update equipment');
+          const err = await response.json();
+          setError(err.detail || 'Failed to update equipment');
         }
       } else {
-        // Create new equipment
-        // Create new equipment with FormData for file upload
-        const submitData = new FormData();
-        submitData.append('name', formData.name);
-        submitData.append('category', formData.category);
-        submitData.append('daily_price', formData.daily_price);
-        submitData.append('pickup_location', formData.pickup_location);
-        if (photoFile) {
-          submitData.append('photo', photoFile);
-        }
-
         const response = await apiRequest('/equipment/', {
           method: 'POST',
           headers: { 'owner_username': userName },
           body: submitData,
         });
-
         if (response.ok) {
           alert('Equipment added successfully!');
           onSave();
         } else {
-          const error = await response.json();
-          setError(error.detail || 'Failed to add equipment');
+          const err = await response.json();
+          setError(err.detail || 'Failed to add equipment');
         }
       }
     } catch (err) {
@@ -85,7 +104,7 @@ const EquipmentForm = ({ item, userName, onClose, onSave }) => {
     <div className="equipment-form-modal">
       <div className="form-container">
         <h3>{item?.equipment_id ? 'Edit Equipment' : 'Add New Equipment'}</h3>
-        
+
         {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit}>
@@ -121,7 +140,6 @@ const EquipmentForm = ({ item, userName, onClose, onSave }) => {
             required
           />
 
-          
           <div className="form-group">
             <label>Equipment Photo</label>
             <input 
@@ -132,13 +150,29 @@ const EquipmentForm = ({ item, userName, onClose, onSave }) => {
             />
           </div>
 
-          <Input
-            label="Pickup Location"
-            name="pickup_location"
-            value={formData.pickup_location}
-            onChange={handleChange}
-            placeholder="e.g., Dhaka, Bangladesh"
-          />
+          {/* Pickup Location with Map */}
+          <div className="form-group">
+            <label>Pickup Location</label>
+            <MapContainer
+              center={mapPosition || [23.8103, 90.4125]} 
+              zoom={12} 
+              className="leaflet-container"
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+              />
+              <ClickHandler
+                setPosition={setMapPosition}
+                name="pickup_location"
+                onChange={handleChange}
+              />
+              {mapPosition && <Marker position={mapPosition} />}
+            </MapContainer>
+            {formData.pickup_location && (
+              <small>Selected: {formData.pickup_location}</small>
+            )}
+          </div>
 
           <div className="form-actions">
             <Button type="submit" variant="primary" isLoading={loading}>

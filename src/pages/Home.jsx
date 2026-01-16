@@ -92,9 +92,15 @@ const Home = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [equipment, setEquipment] = useState(MOCK_GEAR);
   const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   // Fetch equipment from API
   useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (storedUser) {
+      setCurrentUser(storedUser.name);
+    }
+
     const fetchEquipment = async () => {
       setLoading(true);
       try {
@@ -104,21 +110,28 @@ const Home = () => {
         if (response.ok) {
           const data = await response.json();
           // Map API data to match GearCard format
-          const mappedData = data.map(item => ({
+          const mappedData = data.map(item => {
+            const isPng = item.photo_binary && item.photo_binary.startsWith('iVBOR');
+            const mimeType = isPng ? 'image/png' : 'image/jpeg';
+            const imageUrl = item.photo_binary 
+              ? `data:${mimeType};base64,${item.photo_binary}` 
+              : (item.photo_url || "https://via.placeholder.com/300x200?text=No+Image");
+
+            return {
             id: item.equipment_id,
             name: item.name,
             category: item.category,
             price: parseFloat(item.daily_price),
             rating: parseFloat(item.rating_avg) || 0,
             reviews: item.rating_count || 0,
-            image: item.photo_url || "https://via.placeholder.com/300x200?text=No+Image",
+            image: imageUrl,
             owner: item.owner_username,
             ownerId: `OWN-${item.equipment_id}`,
             location: item.pickup_location || "Location not specified",
             isAvailable: item.status === 'available',
             availableDate: item.booked_till,
             reviewsData: []
-          }));
+          }});
           setEquipment(mappedData);
         } else {
           // Fallback to mock data if API fails
@@ -140,7 +153,9 @@ const Home = () => {
   const filteredGear = equipment.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
-    return matchesSearch && matchesCategory;
+    // If not logged in, show all equipment. If logged in, filter out own equipment.
+    const isNotOwner = currentUser ? item.owner !== currentUser : true;
+    return matchesSearch && matchesCategory && isNotOwner;
   });
 
   const handleSearch = (e) => {

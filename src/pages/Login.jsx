@@ -32,6 +32,7 @@ const Login = ({ onNavigate, onLogin }) => {
           totalRents: 45,
         };
         onLogin(user);
+        localStorage.setItem('user', JSON.stringify(user));
         if (user.role === 'Admin') {
           onNavigate('/admin');
         } else {
