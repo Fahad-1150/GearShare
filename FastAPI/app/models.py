@@ -121,3 +121,76 @@ class Equipment(Base):
         server_default=text("CURRENT_TIMESTAMP")
     )
 
+
+class Reservation(Base):
+    __tablename__ = "reservation"
+
+    reservation_id = Column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    equipment_id = Column(
+        Integer,
+        ForeignKey("equipment.equipment_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    owner_username = Column(
+        String(255),
+        ForeignKey("User.UserName_PK", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    reserver_username = Column(
+        String(255),
+        ForeignKey("User.UserName_PK", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    status = Column(
+        String(20),
+        server_default=text("'pending'"),
+        index=True
+    )
+
+    start_date = Column(
+        Date,
+        nullable=False
+    )
+
+    end_date = Column(
+        Date,
+        nullable=False
+    )
+
+    per_day_price = Column(
+        Numeric(10, 2),
+        nullable=False
+    )
+
+    total_price = Column(
+        Numeric(12, 2),
+        nullable=False
+    )
+
+    review_id = Column(
+        Integer,
+        nullable=True
+    )
+
+    created_at = Column(
+        TIMESTAMP,
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    updated_at = Column(
+        TIMESTAMP,
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+

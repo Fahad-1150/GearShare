@@ -52,3 +52,30 @@ class EquipmentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ReservationCreate(BaseModel):
+    equipment_id: int
+    start_date: date
+    end_date: date
+
+
+class ReservationUpdate(BaseModel):
+    status: Optional[str] = None
+    review_id: Optional[int] = None
+
+
+class ReservationResponse(BaseModel):
+    reservation_id: int
+    equipment_id: int
+    owner_username: str
+    reserver_username: str
+    status: str
+    start_date: date
+    end_date: date
+    per_day_price: float
+    total_price: float
+    review_id: Optional[int] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

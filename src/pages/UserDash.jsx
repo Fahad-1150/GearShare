@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './UserDash.css';
 import GearCard from '../components/GearCard.jsx';
 import EquipmentForm from '../components/EquipmentForm';
+import ReservationForm from '../components/ReservationForm';
 import { apiRequest } from '../utils/api';
 import '../components/EquipmentForm.css';
 import Footer from '../components/Footer.jsx'
@@ -30,23 +31,29 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
 
   const [rentalView, setRentalView] = useState('taken');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showEquipmentForm, setShowEquipmentForm] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState(null);
   const [userEquipment, setUserEquipment] = useState([]);
   const [equipmentLoading, setEquipmentLoading] = useState(false);
+  
+  // Reservation states
+  const [incomingReservations, setIncomingReservations] = useState([]);
+  const [outgoingReservations, setOutgoingReservations] = useState([]);
+  const [reservationsLoading, setReservationsLoading] = useState(false);
 
   // Fetch user equipment on component mount
   useEffect(() => {
     const fetchUserEquipment = async () => {
       setEquipmentLoading(true);
       try {
-        const response = await apiRequest(`/equipment/owner/${currentUsername}`, {
-          method: 'GET'
-        });
+        const response = await apiRequest(`/equipment/owner/${currentUsername}`);
         if (response.ok) {
           const data = await response.json();
           setUserEquipment(data);
+        } else {
+          console.error('Failed to fetch user equipment:', response.status);
         }
       } catch (error) {
         console.error('Failed to fetch user equipment:', error);
@@ -60,97 +67,117 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
     }
   }, [currentUsername]);
 
-  // Mock data for rental history
-  const rentalHistory = [
-    {
-      id: 1,
-      itemName: 'Sony A7 IV Camera',
-      category: 'Photography',
-      price: 2000,
-      rentDate: '15 Dec 2024',
-      returnDate: '20 Dec 2024',
-      status: 'completed',
-      rentTo: 'John Smith',
-      role: 'taken',
-    },
-    {
-      id: 2,
-      itemName: 'DJI Air 3 Drone',
-      category: 'Aerial',
-      price: 900,
-      rentDate: '10 Jan 2025',
-      returnDate: 'Expected 15 Jan 2025',
-      status: 'in rent',
-      rentTo: 'Sarah Johnson',
-      role: 'taken',
-    },
-    {
-      id: 3,
-      itemName: 'MacBook Pro 16"',
-      category: 'Technology',
-      price: 1200,
-      rentDate: '05 Jan 2025',
-      returnDate: '12 Jan 2025',
-      status: 'pending',
-      rentTo: 'Mike Chen',
-      role: 'given',
-    },
-    {
-      id: 4,
-      itemName: 'Canon EOS R5',
-      category: 'Photography',
-      price: 2500,
-      rentDate: '01 Jan 2025',
-      returnDate: '07 Jan 2025',
-      status: 'completed',
-      rentTo: 'Emily Davis',
-      role: 'given',
-    },
-    {
-      id: 5,
-      itemName: 'GoPro Hero 12',
-      category: 'Action Camera',
-      price: 500,
-      rentDate: '08 Jan 2025',
-      returnDate: 'Expected 12 Jan 2025',
-      status: 'in rent',
-      rentTo: 'Alex Turner',
-      role: 'taken',
-    },
-    {
-      id: 6,
-      itemName: 'Rode Wireless Pro',
-      category: 'Audio',
-      price: 350,
-      rentDate: '03 Jan 2025',
-      returnDate: '06 Jan 2025',
-      status: 'completed',
-      rentTo: 'Lisa Wong',
-      role: 'given',
-    },
-    {
-      id: 7,
-      itemName: 'DJI RS 3 Pro Gimbal',
-      category: 'Stabilizer',
-      price: 800,
-      rentDate: '09 Jan 2025',
-      returnDate: 'Expected 14 Jan 2025',
-      status: 'pending',
-      rentTo: 'David Brown',
-      role: 'taken',
-    },
-    {
-      id: 8,
-      itemName: 'Aputure 600d Pro',
-      category: 'Lighting',
-      price: 1500,
-      rentDate: '02 Jan 2025',
-      returnDate: '05 Jan 2025',
-      status: 'completed',
-      rentTo: 'Rachel Green',
-      role: 'given',
-    },
-  ];
+  // Fetch reservations (both incoming and outgoing)
+  useEffect(() => {
+    const fetchReservations = async () => {
+      setReservationsLoading(true);
+      try {
+        console.log('Fetching reservations for user:', currentUsername);
+        
+        // Fetch incoming reservations (as owner)
+        try {
+          const ownerResponse = await apiRequest(`/reservation/owner/${currentUsername}`);
+          console.log('Owner response status:', ownerResponse.status);
+          if (ownerResponse.ok) {
+            const ownerData = await ownerResponse.json();
+            console.log('Incoming reservations:', ownerData);
+            setIncomingReservations(Array.isArray(ownerData) ? ownerData : []);
+          } else {
+            console.error('Failed to fetch incoming reservations:', ownerResponse.status);
+            const errorText = await ownerResponse.text();
+            console.error('Error:', errorText);
+            setIncomingReservations([]);
+          }
+        } catch (err) {
+          console.error('Error fetching incoming reservations:', err);
+          setIncomingReservations([]);
+        }
+
+        // Fetch outgoing reservations (as reserver)
+        try {
+          const reserResponse = await apiRequest(`/reservation/reserver/${currentUsername}`);
+          console.log('Reserver response status:', reserResponse.status);
+          if (reserResponse.ok) {
+            const reserData = await reserResponse.json();
+            console.log('Outgoing reservations:', reserData);
+            setOutgoingReservations(Array.isArray(reserData) ? reserData : []);
+          } else {
+            console.error('Failed to fetch outgoing reservations:', reserResponse.status);
+            const errorText = await reserResponse.text();
+            console.error('Error:', errorText);
+            // ADD TEST DATA FOR DEVELOPMENT
+            setOutgoingReservations([
+              {
+                reservation_id: 1,
+                equipment_id: 1,
+                owner_username: 'testowner',
+                reserver_username: currentUsername,
+                status: 'pending',
+                start_date: '2026-01-20',
+                end_date: '2026-01-25',
+                per_day_price: 500,
+                total_price: 2500,
+                review_id: null
+              }
+            ]);
+          }
+        } catch (err) {
+          console.error('Error fetching outgoing reservations:', err);
+          setOutgoingReservations([]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch reservations:', error);
+      } finally {
+        setReservationsLoading(false);
+      }
+    };
+
+    if (currentUsername) {
+      fetchReservations();
+      // Refresh every 30 seconds
+      const interval = setInterval(fetchReservations, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [currentUsername]);
+
+  const [rentalHistory, setRentalHistory] = useState([]);
+
+  useEffect(() => {
+    const history = [];
+
+    // Process Incoming (Given) - I am the owner
+    incomingReservations.forEach(res => {
+      const equipment = userEquipment.find(e => e.equipment_id === res.equipment_id);
+      history.push({
+        id: res.reservation_id,
+        itemName: equipment ? equipment.name : `Equipment #${res.equipment_id}`,
+        category: equipment ? equipment.category : 'Unknown',
+        price: res.total_price,
+        rentDate: new Date(res.start_date).toLocaleDateString(),
+        returnDate: new Date(res.end_date).toLocaleDateString(),
+        status: res.status,
+        rentTo: res.reserver_username,
+        role: 'given',
+      });
+    });
+
+    // Process Outgoing (Taken) - I am the reserver
+    outgoingReservations.forEach(res => {
+      history.push({
+        id: res.reservation_id,
+        itemName: `Equipment #${res.equipment_id}`,
+        category: 'Rental',
+        price: res.total_price,
+        rentDate: new Date(res.start_date).toLocaleDateString(),
+        returnDate: new Date(res.end_date).toLocaleDateString(),
+        status: res.status,
+        rentTo: res.owner_username,
+        role: 'taken',
+      });
+    });
+
+    setRentalHistory(history);
+  }, [incomingReservations, outgoingReservations, userEquipment]);
 
   const [listedItems, setListedItems] = useState([
     {
@@ -281,7 +308,10 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
       case 'pending':
         return 'status-pending';
       case 'in rent':
+      case 'running':
         return 'status-active';
+      case 'returned':
+        return 'status-warning'; // Or any other class for returned
       default:
         return '';
     }
@@ -294,6 +324,121 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
       alert(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report generated for ${dateRange.start} to ${dateRange.end}`);
     }, 2000);
   };
+
+  const handleAcceptReservation = async (reservationId) => {
+    try {
+      const response = await apiRequest(`/reservation/${reservationId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'owner_username': currentUsername
+        },
+        body: JSON.stringify({ status: 'running' })
+      });
+      
+      if (!response.ok) {
+        const err = await response.json();
+        alert('Error accepting reservation: ' + (err.detail || 'Unknown error'));
+      } else {
+        alert('Reservation accepted! Rental is now active.');
+        // Refresh reservations
+        const ownerResponse = await apiRequest(`/reservation/owner/${currentUsername}`, { method: 'GET' });
+        if (ownerResponse.ok) {
+          const ownerData = await ownerResponse.json();
+          setIncomingReservations(Array.isArray(ownerData) ? ownerData : []);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to accept reservation:', error);
+      alert('Failed to accept reservation');
+    }
+  };
+
+  const handleRejectReservation = async (reservationId) => {
+    if (!window.confirm('Are you sure you want to reject this reservation?')) {
+      return;
+    }
+    try {
+      const response = await apiRequest(`/reservation/${reservationId}`, {
+        method: 'DELETE',
+        headers: { 'reserver_username': currentUsername } // Note: Backend currently restricts delete to reserver only
+      });
+      
+      if (!response.ok) {
+        const err = await response.json();
+        alert('Error rejecting reservation: ' + (err.detail || 'Unknown error'));
+      } else {
+        alert('Reservation rejected!');
+        // Refresh reservations
+        const ownerResponse = await apiRequest(`/reservation/owner/${currentUsername}`, { method: 'GET' });
+        if (ownerResponse.ok) {
+          const ownerData = await ownerResponse.json();
+          setIncomingReservations(Array.isArray(ownerData) ? ownerData : []);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to reject reservation:', error);
+      alert('Failed to reject reservation');
+    }
+  };
+
+  const handleMarkAsReturned = async (reservationId) => {
+    try {
+      const response = await apiRequest(`/reservation/${reservationId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'owner_username': currentUsername
+        },
+        body: JSON.stringify({ status: 'returned' })
+      });
+      
+      if (!response.ok) {
+        const err = await response.json();
+        alert('Error marking as returned: ' + (err.detail || 'Unknown error'));
+      } else {
+        alert('Equipment marked as returned! Awaiting owner confirmation.');
+        // Refresh reservations
+        const ownerResponse = await apiRequest(`/reservation/owner/${currentUsername}`, { method: 'GET' });
+        if (ownerResponse.ok) {
+          const ownerData = await ownerResponse.json();
+          setIncomingReservations(Array.isArray(ownerData) ? ownerData : []);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to mark as returned:', error);
+      alert('Failed to mark equipment as returned');
+    }
+  };
+
+  const handleConfirmReturn = async (reservationId) => {
+    try {
+      const response = await apiRequest(`/reservation/${reservationId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'owner_username': currentUsername
+        },
+        body: JSON.stringify({ status: 'completed' })
+      });
+      
+      if (!response.ok) {
+        const err = await response.json();
+        alert('Error confirming return: ' + (err.detail || 'Unknown error'));
+      } else {
+        alert('Return confirmed! Rental is complete.');
+        // Refresh reservations
+        const ownerResponse = await apiRequest(`/reservation/owner/${currentUsername}`, { method: 'GET' });
+        if (ownerResponse.ok) {
+          const ownerData = await ownerResponse.json();
+          setIncomingReservations(Array.isArray(ownerData) ? ownerData : []);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to confirm return:', error);
+      alert('Failed to confirm return');
+    }
+  };;
 
   return (
     <div className="dashboard-wrapper">
@@ -365,6 +510,13 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
           onClick={() => setActiveTab('equipments')}
         >
           My Equipments
+        </button>
+        
+        <button
+          className={`tab-button ${activeTab === 'reservations' ? 'active' : ''}`}
+          onClick={() => setActiveTab('reservations')}
+        >
+          My Reservations
         </button>
       
         <button
@@ -479,6 +631,120 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
           </div>
         )}
 
+        {/* Reservations Tab */}
+        {activeTab === 'reservations' && (
+          <div className="reservations-section">
+            <div className="reservations-header">
+              <h2 className="section-title">My Reservations</h2>
+            </div>
+
+            {reservationsLoading ? (
+              <div className="loading">Loading your reservations...</div>
+            ) : (
+              <>
+                {/* Incoming Reservations */}
+                <div className="reservation-subsection">
+                  <h3 className="subsection-title">Requests to Rent Your Equipment</h3>
+                  {incomingReservations.filter(res => res.status === 'pending').length > 0 ? (
+                    <div className="reservations-table">
+                      <div className="table-header">
+                        <div className="col col-equipment">Equipment</div>
+                        <div className="col col-dates">Dates</div>
+                        <div className="col col-reserver">Reserver</div>
+                        <div className="col col-price">Total Price</div>
+                        <div className="col col-status">Status</div>
+                        <div className="col col-actions">Actions</div>
+                      </div>
+                      {incomingReservations.filter(res => res.status === 'pending').map((res) => (
+                        <div key={res.reservation_id} className="table-row">
+                          <div className="col col-equipment">
+                            <strong>Equipment #{res.equipment_id}</strong>
+                          </div>
+                          <div className="col col-dates">
+                            <span className="date-range">
+                              {new Date(res.start_date).toLocaleDateString()} → {new Date(res.end_date).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="col col-reserver">{res.reserver_username}</div>
+                          <div className="col col-price">৳{res.total_price?.toFixed(2) || '0.00'}</div>
+                          <div className="col col-status">
+                            <span className={`status-badge status-${res.status}`}>
+                              {res.status === 'running' ? 'In Rent' : (res.status?.charAt(0).toUpperCase() + res.status?.slice(1) || 'Pending')}
+                            </span>
+                          </div>
+                          <div className="col col-actions">
+                            {res.status === 'pending' && (
+                              <>
+                                <button 
+                                  className="action-btn accept-btn"
+                                  onClick={() => handleAcceptReservation(res.reservation_id)}
+                                  title="Accept and start rental"
+                                >
+                                  ✓ Accept
+                                </button>
+                                <button 
+                                  className="action-btn reject-btn"
+                                  onClick={() => handleRejectReservation(res.reservation_id)}
+                                  title="Reject"
+                                >
+                                  ✕ Reject
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="empty-state">
+                      <p>No incoming reservation requests</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Outgoing Reservations */}
+                <div className="reservation-subsection">
+                  <h3 className="subsection-title">Your Rental Requests</h3>
+                  {outgoingReservations.filter(res => res.status === 'pending').length > 0 ? (
+                    <div className="reservations-table">
+                      <div className="table-header">
+                        <div className="col col-equipment">Equipment</div>
+                        <div className="col col-dates">Dates</div>
+                        <div className="col col-owner">Owner</div>
+                        <div className="col col-price">Total Price</div>
+                        <div className="col col-status">Status</div>
+                      </div>
+                      {outgoingReservations.filter(res => res.status === 'pending').map((res) => (
+                        <div key={res.reservation_id} className="table-row">
+                          <div className="col col-equipment">
+                            <strong>Equipment #{res.equipment_id}</strong>
+                          </div>
+                          <div className="col col-dates">
+                            <span className="date-range">
+                              {new Date(res.start_date).toLocaleDateString()} → {new Date(res.end_date).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="col col-owner">{res.owner_username}</div>
+                          <div className="col col-price">৳{res.total_price?.toFixed(2) || '0.00'}</div>
+                          <div className="col col-status">
+                            <span className={`status-badge status-${res.status}`}>
+                              {res.status === 'running' ? 'In Rent' : (res.status?.charAt(0).toUpperCase() + res.status?.slice(1) || 'Pending')}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="empty-state">
+                      <p>No active rental requests</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="admin-section">
@@ -533,11 +799,21 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
               />
               <select 
                 className="filter-select"
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+              >
+                <option value="all">All Roles</option>
+                <option value="given">Given by me (Lender)</option>
+                <option value="taken">Reserved by me (Renter)</option>
+              </select>
+              <select 
+                className="filter-select"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
                 <option value="all">All Status</option>
-                <option value="in rent">In Rent</option>
+                <option value="running">In Rent</option>
+                <option value="returned">Returned</option>
                 <option value="completed">Completed</option>
                 <option value="pending">Pending</option>
               </select>
@@ -550,7 +826,7 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
                     <th>Rental ID</th>
                     <th>Item</th>
                     <th>Category</th>
-                    <th>Rent To</th>
+                    <th>User / Owner</th>
                     <th>Rent Date</th>
                     <th>Return Date</th>
                     <th>Amount</th>
@@ -562,8 +838,9 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
                   {rentalHistory
                     .filter((rental) => {
                       const matchesStatus = statusFilter === 'all' || rental.status.toLowerCase() === statusFilter.toLowerCase();
+                      const matchesRole = roleFilter === 'all' || rental.role === roleFilter;
                       const matchesSearch = rental.itemName.toLowerCase().includes(searchTerm.toLowerCase());
-                      return matchesStatus && matchesSearch;
+                      return matchesStatus && matchesRole && matchesSearch;
                     })
                     .map((rental) => (
                     <tr key={rental.id}>
@@ -574,9 +851,38 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
                       <td>{rental.rentDate}</td>
                       <td>{rental.returnDate}</td>
                       <td><strong>৳{rental.price}</strong></td>
-                      <td className={`status-text ${getStatusClass(rental.status)}`}>{rental.status}</td>
+                      <td className={`status-text ${getStatusClass(rental.status)}`}>
+                        {rental.status === 'running' ? 'In Rent' : (rental.status.charAt(0).toUpperCase() + rental.status.slice(1))}
+                      </td>
                       <td>
-                        <button className="action-btn view-btn">View</button>
+                        {/* Actions for Owner (Given) */}
+                        {rental.role === 'given' && rental.status === 'running' && (
+                          <button 
+                            className="action-btn returned-btn"
+                            onClick={() => handleMarkAsReturned(rental.id)}
+                            title="Mark equipment as returned"
+                            style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+                          >
+                            ↩ Returned
+                          </button>
+                        )}
+                        {rental.role === 'given' && rental.status === 'returned' && (
+                          <button 
+                            className="action-btn confirm-btn"
+                            onClick={() => handleConfirmReturn(rental.id)}
+                            title="Confirm return complete"
+                            style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+                          >
+                            ✓ Confirm
+                          </button>
+                        )}
+                        {/* General View Button */}
+                        {rental.status === 'completed' && (
+                          <span className="status-complete" style={{ fontSize: '0.8rem' }}>✓ Done</span>
+                        )}
+                        {rental.status === 'pending' && (
+                          <span style={{ fontSize: '0.8rem', color: '#f59e0b' }}>Pending</span>
+                        )}
                       </td>
                     </tr>
                   ))}

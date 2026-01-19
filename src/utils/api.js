@@ -20,6 +20,13 @@ export const apiRequest = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  console.log('API Request:', {
+    url,
+    method: options.method || 'GET',
+    headers,
+    body: options.body ? JSON.parse(options.body) : undefined
+  });
+
   const response = await fetch(url, {
     ...options,
     headers,

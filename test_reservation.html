@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Reservation API</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; background: #f0f0f0; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #fff; padding: 10px; overflow-x: auto; }
+        .success { background: #dfffdf; }
+        .error { background: #ffdfdf; }
+    </style>
+</head>
+<body>
+    <h1>Reservation API Tester</h1>
+    
+    <div class="test-section">
+        <h2>Test Fetch Incoming Reservations</h2>
+        <input type="text" id="username" placeholder="Enter username (e.g., bapon)" value="bapon">
+        <button onclick="testFetchIncoming()">Get Incoming Reservations</button>
+        <pre id="result-incoming"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Fetch Outgoing Reservations</h2>
+        <button onclick="testFetchOutgoing()">Get Outgoing Reservations</button>
+        <pre id="result-outgoing"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Create Reservation</h2>
+        <label>Equipment ID: <input type="number" id="equipId" value="1"></label><br>
+        <label>Start Date: <input type="date" id="startDate" value="2026-01-20"></label><br>
+        <label>End Date: <input type="date" id="endDate" value="2026-01-25"></label><br>
+        <button onclick="testCreateReservation()">Create Reservation</button>
+        <pre id="result-create"></pre>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000';
+        
+        async function testFetchIncoming() {
+            const username = document.getElementById('username').value;
+            const resultDiv = document.getElementById('result-incoming');
+            try {
+                const response = await fetch(`${API_BASE}/reservation/owner/${username}`);
+                const data = await response.json();
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.className = response.ok ? 'success' : 'error';
+            } catch (err) {
+                resultDiv.textContent = `Error: ${err.message}`;
+                resultDiv.className = 'error';
+            }
+        }
+
+        async function testFetchOutgoing() {
+            const username = document.getElementById('username').value;
+            const resultDiv = document.getElementById('result-outgoing');
+            try {
+                const response = await fetch(`${API_BASE}/reservation/reserver/${username}`);
+                const data = await response.json();
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.className = response.ok ? 'success' : 'error';
+            } catch (err) {
+                resultDiv.textContent = `Error: ${err.message}`;
+                resultDiv.className = 'error';
+            }
+        }
+
+        async function testCreateReservation() {
+            const equipId = document.getElementById('equipId').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const username = document.getElementById('username').value;
+            const resultDiv = document.getElementById('result-create');
+            
+            try {
+                const response = await fetch(`${API_BASE}/reservation/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'reserver_username': username
+                    },
+                    body: JSON.stringify({
+                        equipment_id: parseInt(equipId),
+                        start_date: startDate,
+                        end_date: endDate
+                    })
+                });
+                const data = await response.json();
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.className = response.ok ? 'success' : 'error';
+            } catch (err) {
+                resultDiv.textContent = `Error: ${err.message}`;
+                resultDiv.className = 'error';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import './GearDetails.css';
+import ReservationForm from '../components/ReservationForm';
 
 const GearDetails = ({ item, onBack }) => {
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [showReservationForm, setShowReservationForm] = useState(false);
 
 
   const allReviews = item.reviewsData || [];
@@ -72,6 +74,7 @@ const GearDetails = ({ item, onBack }) => {
 
                   <button 
                     className={`btn-primary booking ${!item.isAvailable ? 'disabled' : ''}`}
+                    onClick={() => setShowReservationForm(true)}
                     disabled={!item.isAvailable}
                   >
                     {item.isAvailable ? "Reserve Now" : `Booked until ${item.availableDate}`}
@@ -140,6 +143,16 @@ const GearDetails = ({ item, onBack }) => {
           )}
         </div>
       </section>
+
+      {showReservationForm && (
+        <ReservationForm 
+          equipment={item} 
+          onClose={() => setShowReservationForm(false)}
+          onSuccess={() => {
+            // Refresh or update equipment status if needed
+          }}
+        />
+      )}
     </div>
   );
 };
