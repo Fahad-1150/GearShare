@@ -153,7 +153,7 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
 
         // Fetch average rating for the owner
         try {
-          const ratingResponse = await apiRequest(`/review/owner/${currentUsername}/average-rating`);
+          const ratingResponse = await apiRequest(`/api/review/owner/${currentUsername}/average-rating`);
           if (ratingResponse.ok) {
             const ratingData = await ratingResponse.json();
             console.log('Average rating:', ratingData);

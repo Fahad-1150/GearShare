@@ -7,6 +7,9 @@ const ReviewForm = ({ reservation, equipment, onClose, onSuccess }) => {
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Debug log to verify props
+  console.log('ReviewForm props - Reservation:', reservation, 'Equipment:', equipment);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -17,19 +20,23 @@ const ReviewForm = ({ reservation, equipment, onClose, onSuccess }) => {
 
     setLoading(true);
     try {
+      const reviewPayload = {
+        reservation_id: reservation.reservation_id,
+        equipment_id: equipment.equipment_id || equipment.id,
+        rating: parseInt(rating),
+        comment: comment
+      };
+      console.log('Submitting review with payload:', reviewPayload);
+      
       const response = await apiRequest('/api/review/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reservation_id: reservation.reservation_id,
-          equipment_id: equipment.equipment_id,
-          rating: parseInt(rating),
-          comment: comment
-        })
+        body: JSON.stringify(reviewPayload)
       });
 
       if (!response.ok) {
         const error = await response.json();
+        console.error('Review submission error:', error);
         alert('Failed to submit review: ' + (error.detail || 'Unknown error'));
       } else {
         alert('Review submitted successfully!');
@@ -40,7 +47,7 @@ const ReviewForm = ({ reservation, equipment, onClose, onSuccess }) => {
       }
     } catch (error) {
       console.error('Error submitting review:', error);
-      alert('Failed to submit review');
+      alert('Failed to submit review: ' + error.message);
     } finally {
       setLoading(false);
     }

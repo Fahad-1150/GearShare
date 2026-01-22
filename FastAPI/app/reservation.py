@@ -190,13 +190,13 @@ async def get_total_earnings(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Calculate total earnings for an owner by summing all completed reservations' total_price
-    where the owner_username matches and status is 'completed'
+    Calculate total earnings for an owner by summing all returned and completed reservations' total_price
+    where the owner_username matches and status is 'returned' or 'completed'
     """
     result = await db.execute(
         select(func.sum(Reservation.total_price)).where(
             (Reservation.owner_username == owner_username) & 
-            (Reservation.status == 'completed')
+            (Reservation.status.in_(['returned', 'completed']))
         )
     )
     total_earnings = result.scalar() or 0

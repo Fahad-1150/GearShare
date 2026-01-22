@@ -173,7 +173,7 @@ async def get_owner_average_rating(
 ):
     """
     Calculate average rating for an owner by averaging all reviews 
-    where owner_username matches the provided username
+    from returned or completed rentals where owner_username matches
     """
     result = await db.execute(
         select(func.avg(Review.rating)).where(
