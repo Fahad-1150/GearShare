@@ -29,7 +29,8 @@ PROJECT STRUCTURE:
 └── SQL Tables
     ├── User table
     ├── Equipment table
-    └── Reservation table
+    ├── Reservation table
+    └── Review table
 
 ================================================================================
                         DATABASE SETUP (PostgreSQL)
@@ -125,6 +126,54 @@ CREATE INDEX idx_reservation_owner ON reservation(owner_username);
 CREATE INDEX idx_reservation_reserver ON reservation(reserver_username);
 CREATE INDEX idx_reservation_equipment ON reservation(equipment_id);
 CREATE INDEX idx_reservation_status ON reservation(status);
+
+
+--- TABLE 4: REVIEW TABLE ---
+
+CREATE TABLE review (
+    review_id SERIAL PRIMARY KEY,
+    
+    reservation_id INTEGER NOT NULL,
+    equipment_id INTEGER NOT NULL,
+    
+    reviewer_username VARCHAR(255) NOT NULL,
+    owner_username VARCHAR(255) NOT NULL,
+    
+    rating INTEGER NOT NULL,
+    CHECK (rating >= 1 AND rating <= 5),
+    
+    comment TEXT,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_review_reservation
+        FOREIGN KEY (reservation_id)
+        REFERENCES reservation(reservation_id)
+        ON DELETE CASCADE,
+    
+    CONSTRAINT fk_review_equipment
+        FOREIGN KEY (equipment_id)
+        REFERENCES equipment(equipment_id)
+        ON DELETE CASCADE,
+    
+    CONSTRAINT fk_review_reviewer
+        FOREIGN KEY (reviewer_username)
+        REFERENCES "User"("UserName_PK")
+        ON DELETE CASCADE,
+    
+    CONSTRAINT fk_review_owner
+        FOREIGN KEY (owner_username)
+        REFERENCES "User"("UserName_PK")
+        ON DELETE CASCADE,
+    
+    CONSTRAINT uq_review_reservation UNIQUE (reservation_id)
+);
+
+CREATE INDEX idx_review_equipment ON review(equipment_id);
+CREATE INDEX idx_review_reviewer ON review(reviewer_username);
+CREATE INDEX idx_review_owner ON review(owner_username);
+CREATE INDEX idx_review_reservation ON review(reservation_id);
 
 ================================================================================
                         QUICK DATABASE SETUP (pgAdmin)
@@ -289,6 +338,9 @@ npm run build
 ✓ User dashboard with analytics
 ✓ Rental history tracking
 ✓ Equipment ratings and reviews
+✓ Review system for completed rentals
+✓ Reviews displayed in GearDetails and GearCard
+✓ Analytics tab with review action buttons
 
 ================================================================================
                         IMPORTANT NOTES

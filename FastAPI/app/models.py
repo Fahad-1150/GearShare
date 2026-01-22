@@ -258,3 +258,61 @@ class Report(Base):
         TIMESTAMP,
         server_default=text("CURRENT_TIMESTAMP")
     )
+
+
+class Review(Base):
+    __tablename__ = "review"
+
+    review_id = Column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    reservation_id = Column(
+        Integer,
+        ForeignKey("reservation.reservation_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    equipment_id = Column(
+        Integer,
+        ForeignKey("equipment.equipment_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    reviewer_username = Column(
+        String(255),
+        ForeignKey("User.UserName_PK", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    owner_username = Column(
+        String(255),
+        ForeignKey("User.UserName_PK", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    rating = Column(
+        Integer,
+        nullable=False
+    )
+
+    comment = Column(
+        String,
+        nullable=True
+    )
+
+    created_at = Column(
+        TIMESTAMP,
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    updated_at = Column(
+        TIMESTAMP,
+        server_default=text("CURRENT_TIMESTAMP")
+    )

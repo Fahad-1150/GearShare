@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './GearDetails.css';
 import ReservationForm from '../components/ReservationForm';
 import { apiRequest } from '../utils/api';
@@ -8,6 +8,26 @@ const GearDetails = ({ item, onBack }) => {
   const [showReservationForm, setShowReservationForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [equipmentData, setEquipmentData] = useState(item);
+  const [reviews, setReviews] = useState([]);
+
+  // Fetch reviews on component mount
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await apiRequest(`/api/review/equipment/${item.id || item.equipment_id}`);
+        if (response.ok) {
+          const reviewsData = await response.json();
+          setReviews(reviewsData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch reviews:', error);
+      }
+    };
+
+    if (item.id || item.equipment_id) {
+      fetchReviews();
+    }
+  }, [item.id, item.equipment_id]);
 
   // Check if equipment has active reservation
   const hasActiveReservation = () => {
@@ -147,30 +167,29 @@ const GearDetails = ({ item, onBack }) => {
         </div>
       </section>
 
-      
       <section className="reviews-section">
         <div className="lender-container">
           <div className="reviews-header">
             <h2 className="grid-title">Customer Reviews</h2>
             <div className="rating-summary">
-              <span className="big-rating">{item.rating}</span>
-              <span className="total-count">({allReviews.length} reviews)</span>
+              <span className="big-rating">{equipmentData.rating_avg || item.rating || 0}</span>
+              <span className="total-count">({reviews.length} reviews)</span>
             </div>
           </div>
 
           <div className="reviews-grid">
-            {allReviews.length > 0 ? (
-              displayedReviews.map((rev, index) => (
-                <div key={index} className="review-card">
+            {reviews.length > 0 ? (
+              (showAllReviews ? reviews : reviews.slice(0, 3)).map((rev) => (
+                <div key={rev.review_id} className="review-card">
                   <div className="rev-user-row">
-                    <div className="rev-avatar">{rev.user ? rev.user.charAt(0) : 'U'}</div>
+                    <div className="rev-avatar">{rev.reviewer_username ? rev.reviewer_username.charAt(0) : 'U'}</div>
                     <div className="rev-info">
-                      <p className="rev-name">{rev.user}</p>
-                      <p className="rev-date">{rev.date}</p>
+                      <p className="rev-name">{rev.reviewer_username}</p>
+                      <p className="rev-date">{new Date(rev.created_at).toLocaleDateString()}</p>
                     </div>
                     <div className="rev-stars">{"★".repeat(rev.rating)}</div>
                   </div>
-                  <p className="rev-comment">{rev.comment}</p>
+                  <p className="rev-comment">{rev.comment || 'No comment provided'}</p>
                 </div>
               ))
             ) : (
@@ -178,12 +197,12 @@ const GearDetails = ({ item, onBack }) => {
             )}
           </div>
 
-          {allReviews.length > 3 && (
+          {reviews.length > 3 && (
             <button 
               className="show-all-btn" 
               onClick={() => setShowAllReviews(!showAllReviews)}
             >
-              {showAllReviews ? "Show Less" : `Show All ${allReviews.length} Reviews`}
+              {showAllReviews ? "Show Less" : `Show All ${reviews.length} Reviews`}
             </button>
           )}
         </div>

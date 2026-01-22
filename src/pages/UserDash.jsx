@@ -3,6 +3,7 @@ import './UserDash.css';
 import GearCard from '../components/GearCard.jsx';
 import EquipmentForm from '../components/EquipmentForm';
 import ReservationForm from '../components/ReservationForm';
+import ReviewForm from '../components/ReviewForm';
 import { apiRequest } from '../utils/api';
 import '../components/EquipmentForm.css';
 import Footer from '../components/Footer.jsx'
@@ -42,6 +43,11 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
   const [incomingReservations, setIncomingReservations] = useState([]);
   const [outgoingReservations, setOutgoingReservations] = useState([]);
   const [reservationsLoading, setReservationsLoading] = useState(false);
+
+  // Review modal state
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewingReservation, setReviewingReservation] = useState(null);
+  const [reviewingEquipment, setReviewingEquipment] = useState(null);
 
   // Fetch user equipment on component mount
   useEffect(() => {
@@ -544,7 +550,38 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
       console.error('Failed to confirm return:', error);
       alert('Failed to confirm return');
     }
-  };;
+  };
+
+  const handleOpenReviewForm = async (reservation) => {
+    try {
+      const equipmentResponse = await apiRequest(`/equipment/${reservation.equipment_id}`);
+      if (equipmentResponse.ok) {
+        const equipmentData = await equipmentResponse.json();
+        setReviewingReservation(reservation);
+        setReviewingEquipment(equipmentData);
+        setShowReviewForm(true);
+      }
+    } catch (error) {
+      console.error('Error fetching equipment:', error);
+      alert('Failed to load equipment details');
+    }
+  };
+
+  const handleReviewSuccess = () => {
+    // Refresh reservations after review is submitted
+    const fetchReservations = async () => {
+      try {
+        const reserResponse = await apiRequest(`/reservation/reserver/${currentUsername}`);
+        if (reserResponse.ok) {
+          const reserData = await reserResponse.json();
+          setOutgoingReservations(Array.isArray(reserData) ? reserData : []);
+        }
+      } catch (err) {
+        console.error('Error refreshing reservations:', err);
+      }
+    };
+    fetchReservations();
+  };
 
   return (
     <div className="dashboard-wrapper">
@@ -846,6 +883,50 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
                     </div>
                   )}
                 </div>
+
+                {/* Completed Rentals - Write Review */}
+                <div className="reservation-subsection">
+                  <h3 className="subsection-title">Completed Rentals (Write Review)</h3>
+                  {outgoingReservations.filter(res => res.status === 'completed').length > 0 ? (
+                    <div className="reservations-table">
+                      <div className="table-header">
+                        <div className="col col-equipment">Equipment</div>
+                        <div className="col col-dates">Rental Period</div>
+                        <div className="col col-owner">Owner</div>
+                        <div className="col col-price">Total Price</div>
+                        <div className="col col-actions">Action</div>
+                      </div>
+                      {outgoingReservations.filter(res => res.status === 'completed').map((res) => (
+                        <div key={res.reservation_id} className="table-row">
+                          <div className="col col-equipment">
+                            <strong>Equipment #{res.equipment_id}</strong>
+                          </div>
+                          <div className="col col-dates">
+                            <span className="date-range">
+                              {new Date(res.start_date).toLocaleDateString()} → {new Date(res.end_date).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="col col-owner">{res.owner_username}</div>
+                          <div className="col col-price">৳{res.total_price?.toFixed(2) || '0.00'}</div>
+                          <div className="col col-actions">
+                            <button 
+                              className="action-btn review-btn"
+                              onClick={() => handleOpenReviewForm(res)}
+                              title="Write a review"
+                              style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+                            >
+                              ⭐ Write Review
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="empty-state">
+                      <p>No completed rentals to review</p>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -982,8 +1063,24 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
                             ✓ Confirm
                           </button>
                         )}
+                        {/* Review button for renter on returned rentals */}
+                        {rental.role === 'taken' && rental.status === 'returned' && (
+                          <button 
+                            className="action-btn review-btn"
+                            onClick={() => {
+                              const reservation = outgoingReservations.find(r => r.reservation_id === rental.id);
+                              if (reservation) {
+                                handleOpenReviewForm(reservation);
+                              }
+                            }}
+                            title="Write a review"
+                            style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+                          >
+                            ⭐ Review
+                          </button>
+                        )}
                         {/* General View Button */}
-                        {rental.status === 'completed' && (
+                        {rental.status === 'completed' && rental.role === 'given' && (
                           <span className="status-complete" style={{ fontSize: '0.8rem' }}>✓ Done</span>
                         )}
                         {rental.status === 'pending' && (
@@ -1206,6 +1303,20 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
             userName={currentUsername}
             onClose={handleEquipmentFormClose}
             onSave={handleEquipmentFormSave}
+          />
+        )}
+
+        {/* Review Form Modal */}
+        {showReviewForm && reviewingReservation && reviewingEquipment && (
+          <ReviewForm
+            reservation={reviewingReservation}
+            equipment={reviewingEquipment}
+            onClose={() => {
+              setShowReviewForm(false);
+              setReviewingReservation(null);
+              setReviewingEquipment(null);
+            }}
+            onSuccess={handleReviewSuccess}
           />
         )}
       </div>
