@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from .database import get_db
 from .models import Review, Reservation, Equipment
@@ -164,3 +164,96 @@ async def delete_review(
     await db.commit()
 
     return {"message": "Review deleted successfully"}
+
+# GET average rating for an owner (based on reviews of their equipment)
+@router.get("/owner/{owner_username}/average-rating")
+async def get_owner_average_rating(
+    owner_username: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Calculate average rating for an owner by averaging all reviews 
+    where owner_username matches the provided username
+    """
+    result = await db.execute(
+        select(func.avg(Review.rating)).where(
+            Review.owner_username == owner_username
+        )
+    )
+    average_rating = result.scalar() or 0.0
+    
+    # Get count of reviews
+    count_result = await db.execute(
+        select(func.count(Review.review_id)).where(
+            Review.owner_username == owner_username
+        )
+    )
+    review_count = count_result.scalar() or 0
+    
+    return {
+        "owner_username": owner_username,
+        "average_rating": float(average_rating) if average_rating else 0.0,
+        "total_reviews": review_count,
+        "scale": 5
+    }
+
+
+# GET detailed rating breakdown for an owner
+@router.get("/owner/{owner_username}/rating-details")
+async def get_owner_rating_details(
+    owner_username: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get detailed rating breakdown for an owner including all reviews on their equipment
+    """
+    result = await db.execute(
+        select(Review).where(
+            Review.owner_username == owner_username
+        ).order_by(Review.created_at.desc())
+    )
+    reviews = result.scalars().all()
+    
+    if not reviews:
+        return {
+            "owner_username": owner_username,
+            "average_rating": 0.0,
+            "total_reviews": 0,
+            "rating_distribution": {
+                "5_star": 0,
+                "4_star": 0,
+                "3_star": 0,
+                "2_star": 0,
+                "1_star": 0
+            },
+            "reviews": []
+        }
+    
+    # Calculate rating distribution
+    rating_distribution = {
+        "5_star": len([r for r in reviews if r.rating == 5]),
+        "4_star": len([r for r in reviews if r.rating == 4]),
+        "3_star": len([r for r in reviews if r.rating == 3]),
+        "2_star": len([r for r in reviews if r.rating == 2]),
+        "1_star": len([r for r in reviews if r.rating == 1])
+    }
+    
+    average_rating = sum(r.rating for r in reviews) / len(reviews)
+    
+    return {
+        "owner_username": owner_username,
+        "average_rating": float(average_rating),
+        "total_reviews": len(reviews),
+        "rating_distribution": rating_distribution,
+        "reviews": [
+            {
+                "review_id": r.review_id,
+                "equipment_id": r.equipment_id,
+                "reviewer_username": r.reviewer_username,
+                "rating": r.rating,
+                "comment": r.comment,
+                "created_at": r.created_at.isoformat()
+            }
+            for r in reviews
+        ]
+    }
