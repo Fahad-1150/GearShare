@@ -1,45 +1,79 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './TotalUser.css';
 import Footer from '../components/Footer';
-
-const mockUsers = [
-  { id: 1, name: 'Alice Khan', email: 'alice@gearshare.com', role: 'User', location: 'Dhaka, Bangladesh', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice', verified: true },
-  { id: 2, name: 'Bapon Das', email: 'bapon@gearshare.com', role: 'User', location: 'Feni, Bangladesh', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bapon', verified: false },
-  { id: 3, name: 'System Admin', email: 'admin@gmail.com', role: 'Admin', location: 'HQ', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin', verified: true },
-  { id: 4, name: 'System Admin', email: 'admin@gmail.com', role: 'Admin', location: 'HQ', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin', verified: false },
-];
-
-
+import UserDetailModal from '../components/UserDetailModal';
+import { apiRequest } from '../utils/api';
 
 const TotalUser = ({ userData, onNavigate }) => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ name: '', id: '', location: '', verified: 'any' });
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await apiRequest('/users/');
+      if (!response.ok) throw new Error('Failed to fetch users');
+      const data = await response.json();
+      setUsers(data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      setError('Failed to load users');
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredUsers = useMemo(() => {
-    return mockUsers.filter((u) => {
-      if (filters.name && !u.name.toLowerCase().includes(filters.name.trim().toLowerCase())) return false;
-      if (filters.id && !String(u.id).includes(String(filters.id).trim())) return false;
-      if (filters.location && !u.location.toLowerCase().includes(filters.location.trim().toLowerCase())) return false;
-      if (filters.verified === 'verified' && !u.verified) return false;
-      if (filters.verified === 'unverified' && u.verified) return false;
+    return users.filter((u) => {
+      if (filters.name && !u.UserName_PK.toLowerCase().includes(filters.name.trim().toLowerCase())) return false;
+      if (filters.id && !u.UserName_PK.toLowerCase().includes(filters.id.trim().toLowerCase())) return false;
+      if (filters.location && !u.Location?.toLowerCase().includes(filters.location.trim().toLowerCase())) return false;
+      if (filters.verified === 'verified' && !u.VerificationStatus) return false;
+      if (filters.verified === 'unverified' && u.VerificationStatus) return false;
       return true;
     });
-  }, [filters]);
+  }, [filters, users]);
 
   const onChange = (key) => (e) => setFilters((p) => ({ ...p, [key]: e.target.value }));
   const resetFilters = () => setFilters({ name: '', id: '', location: '', verified: 'any' });
 
+  const handleSaveUser = async (updatedData) => {
+    try {
+      setUsers(users.map(u => 
+        u.UserName_PK === selectedUser.UserName_PK 
+          ? { ...u, ...updatedData } 
+          : u
+      ));
+      setSelectedUser(null);
+      alert('User updated successfully!');
+    } catch (err) {
+      console.error('Error updating user:', err);
+    }
+  };
+
   return (
-   <div className="full-page" >
-
-
-
-
-
-    <div className="total-users-page" >
-      <div className="page-header">
-        <h2>All Users</h2>
-        <p className="muted">Manage platform users — view, search, or inspect profiles.</p>
-      </div>
+    <div className="full-page">
+      {selectedUser && (
+        <UserDetailModal 
+          user={selectedUser} 
+          onClose={() => setSelectedUser(null)}
+          onSave={handleSaveUser}
+        />
+      )}
+      <div className="total-users-page">
+        <div className="page-header">
+          <h2>All Users</h2>
+          <p className="muted">Manage platform users — view, search, or inspect profiles.</p>
+        </div>
 
         <div className="filter-bar">
           <input className="filter-input" placeholder="Name" value={filters.name} onChange={onChange('name')} />
@@ -55,31 +89,32 @@ const TotalUser = ({ userData, onNavigate }) => {
           </div>
         </div>
 
-      <div className="users-grid">
-        {filteredUsers.length === 0 ? (
-          <div className="table-placeholder">No users match the filter criteria.</div>
-        ) : (
-          filteredUsers.map((u) => (
-            <div key={u.id} className="user-card">
-              <img src={u.avatar} alt={u.name} className="user-card-avatar" />
-              <div className="user-card-body">
-                <div className="user-card-name">{u.name}</div>
-                <div className="user-card-email">{u.email}</div>
-                <div className="user-card-meta">{u.role} • {u.location} {u.verified ? '• ✅' : ''}</div>
+        <div className="users-grid">
+          {loading ? (
+            <div className="table-placeholder">Loading users...</div>
+          ) : error ? (
+            <div className="table-placeholder">Error: {error}</div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="table-placeholder">No users match the filter criteria.</div>
+          ) : (
+            filteredUsers.map((u) => (
+              <div key={u.UserName_PK} className="user-card">
+                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${u.UserName_PK}`} alt={u.UserName_PK} className="user-card-avatar" />
+                <div className="user-card-body">
+                  <div className="user-card-name">{u.UserName_PK}</div>
+                  <div className="user-card-email">{u.Email}</div>
+                  <div className="user-card-meta">{u.Role} • {u.Location || 'N/A'} {u.VerificationStatus ? '• ✅' : ''}</div>
+                </div>
+                <div className="user-card-actions">
+                  <button className="btn btn-outline" onClick={() => setSelectedUser(u)}>View</button>
+                </div>
               </div>
-              <div className="user-card-actions">
-                <button className="btn btn-outline" onClick={() => onNavigate(`/admin/users/${u.id}`)}>View</button>
-              </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
-
-      
+      <Footer />
     </div>
-    <Footer/>
-    </div>
-    
   );
 };
 

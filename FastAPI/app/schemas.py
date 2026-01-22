@@ -12,6 +12,19 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+
+class UserResponse(BaseModel):
+    UserName_PK: str
+    Email: str
+    Role: str
+    Location: Optional[str] = None
+    VerificationStatus: bool
+    CreatedAt: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -48,6 +61,36 @@ class EquipmentResponse(BaseModel):
     booked_till: Optional[date] = None
     rating_avg: float
     rating_count: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ReportCreate(BaseModel):
+    report_type: str
+    subject: str
+    description: Optional[str] = None
+    equipment_id: Optional[int] = None
+    reservation_id: Optional[int] = None
+    priority: Optional[str] = "medium"
+
+
+class ReportUpdate(BaseModel):
+    status: Optional[str] = None
+    priority: Optional[str] = None
+
+
+class ReportResponse(BaseModel):
+    report_id: int
+    reporter_username: str
+    report_type: str
+    subject: str
+    description: Optional[str] = None
+    equipment_id: Optional[int] = None
+    reservation_id: Optional[int] = None
+    status: str
+    priority: str
     created_at: datetime
 
     class Config:

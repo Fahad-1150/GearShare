@@ -82,13 +82,7 @@
   font-weight: 600;
 }
 
-.filters-section {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  
-}
+
 
 .search-input {
   flex: 1;
@@ -213,6 +207,36 @@
   transition: all 0.2s;
 }
 
+.edit-btn {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.edit-btn:hover {
+  background: #2563eb;
+  color: #fff;
+}
+
+.save-btn {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.save-btn:hover {
+  background: #16a34a;
+  color: #fff;
+}
+
+.cancel-btn {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.cancel-btn:hover {
+  background: #dc2626;
+  color: #fff;
+}
+
 .extend-btn {
   background: #dbeafe;
   color: #2563eb;
@@ -241,6 +265,54 @@
 .end-btn:hover {
   background: #dc2626;
   color: #fff;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #4f46e5;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.edit-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+.editing-row {
+  background: #eef2ff !important;
+  border-left: 3px solid #4f46e5;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.status-pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-badge.status-active {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.status-badge.status-completed {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.status-badge.status-cancelled {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .no-results {

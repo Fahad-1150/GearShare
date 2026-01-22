@@ -2,13 +2,21 @@ import React from 'react';
 import './GearCard.css';
 
 const GearCard = ({ item }) => {
+  // Handle both API data (photo_url) and mock data (image)
+  const imageUrl = item.photo_url || item.image || 'https://via.placeholder.com/400x300?text=No+Image';
+  const isAvailable = item.status === 'available' || item.isAvailable;
+  const rating = item.rating_avg || item.rating || 0;
+  const location = item.pickup_location || item.location || 'N/A';
+  const price = item.daily_price || item.price || 0;
+
   return (
-    <div className={`card-item ${!item.isAvailable ? 'unavailable' : ''}`}>
+    <div className={`card-item ${!isAvailable ? 'unavailable' : ''}`}>
       <div className="card-media">
         <img 
-          src={item.image} 
+          src={imageUrl} 
           alt={item.name} 
           className="card-image"
+          onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300?text=No+Image'; }}
         />
 
         {/* Top Left: Category Tag */}
@@ -21,17 +29,17 @@ const GearCard = ({ item }) => {
           <svg className="rating-icon" fill="currentColor" viewBox="0 0 20 20">
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
           </svg>
-          <span className="rating-value">{item.rating}</span>
+          <span className="rating-value">{rating.toFixed(1)}</span>
         </div>
 
         {/* Bottom Overlay: Availability Badge */}
-        <div className={`status-badge ${item.isAvailable ? 'available' : 'booked'}`}>
+        <div className={`status-badge ${isAvailable ? 'available' : 'booked'}`}>
           <span className="status-dot"></span>
-          {item.isAvailable ? (
+          {isAvailable ? (
             'Available Now'
           ) : (
             <span>
-              Booked <small className="available-date">(From: {item.availableDate})</small>
+              Booked <small className="available-date">(Until: {item.booked_till})</small>
             </span>
           )}
         </div>
@@ -45,16 +53,16 @@ const GearCard = ({ item }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          {item.location}
+          {location}
         </div>
 
         <div className="card-footer">
           <div className="card-pricing">
-            <span className="price-amount">{item.price} TK</span>
+            <span className="price-amount">{price} TK</span>
             <span className="price-unit">/ day</span>
           </div>
 
-          { item.isAvailable ? 'Available' : 'Not Available'}
+          { isAvailable ? 'Available' : 'Not Available'}
           
           {/*<button 
             className="card-action" 

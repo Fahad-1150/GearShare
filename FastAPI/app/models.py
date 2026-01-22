@@ -194,3 +194,67 @@ class Reservation(Base):
     )
 
 
+class Report(Base):
+    __tablename__ = "report"
+
+    report_id = Column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    reporter_username = Column(
+        String(255),
+        ForeignKey("User.UserName_PK", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    report_type = Column(
+        String(50),
+        nullable=False,
+        index=True
+    )
+
+    subject = Column(
+        String(255),
+        nullable=False
+    )
+
+    description = Column(
+        String
+    )
+
+    equipment_id = Column(
+        Integer,
+        ForeignKey("equipment.equipment_id", ondelete="SET NULL"),
+        nullable=True
+    )
+
+    reservation_id = Column(
+        Integer,
+        ForeignKey("reservation.reservation_id", ondelete="SET NULL"),
+        nullable=True
+    )
+
+    status = Column(
+        String(20),
+        server_default=text("'open'"),
+        index=True
+    )
+
+    priority = Column(
+        String(20),
+        server_default=text("'medium'"),
+        index=True
+    )
+
+    created_at = Column(
+        TIMESTAMP,
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    updated_at = Column(
+        TIMESTAMP,
+        server_default=text("CURRENT_TIMESTAMP")
+    )

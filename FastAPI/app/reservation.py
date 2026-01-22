@@ -10,6 +10,16 @@ from .schemas import ReservationCreate, ReservationUpdate, ReservationResponse
 router = APIRouter()
 
 
+# GET all reservations
+@router.get("/", response_model=list[ReservationResponse])
+async def get_all_reservations(
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Reservation))
+    reservations = result.scalars().all()
+    return reservations
+
+
 # CREATE reservation
 @router.post("/", response_model=ReservationResponse)
 async def create_reservation(

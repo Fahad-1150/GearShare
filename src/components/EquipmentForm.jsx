@@ -71,29 +71,19 @@ const EquipmentForm = ({ item, userName, onClose, onSave }) => {
           headers: { 'owner_username': userName },
           body: submitData,
         });
-        if (response.ok) {
-          alert('Equipment updated successfully!');
-          onSave();
-        } else {
-          const err = await response.json();
-          setError(err.detail || 'Failed to update equipment');
-        }
+        alert('Equipment updated successfully!');
+        onSave();
       } else {
         const response = await apiRequest('/equipment/', {
           method: 'POST',
           headers: { 'owner_username': userName },
           body: submitData,
         });
-        if (response.ok) {
-          alert('Equipment added successfully!');
-          onSave();
-        } else {
-          const err = await response.json();
-          setError(err.detail || 'Failed to add equipment');
-        }
+        alert('Equipment added successfully!');
+        onSave();
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err.message || 'Network error. Please check if FastAPI server is running on http://127.0.0.1:8000');
       console.error(err);
     } finally {
       setLoading(false);

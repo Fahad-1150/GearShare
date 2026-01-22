@@ -1,10 +1,51 @@
 import React, { useState } from 'react';
 import './GearDetails.css';
 import ReservationForm from '../components/ReservationForm';
+import { apiRequest } from '../utils/api';
 
 const GearDetails = ({ item, onBack }) => {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [showReservationForm, setShowReservationForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [equipmentData, setEquipmentData] = useState(item);
+
+  // Check if equipment has active reservation
+  const hasActiveReservation = () => {
+    // Check if equipment status is booked
+    if (item.status === 'booked') {
+      return true;
+    }
+    return false;
+  };
+
+  // Check if equipment is available for booking
+  const isAvailable = () => {
+    // Simply check if status is available
+    return item.status === 'available' || item.isAvailable === true;
+  };
+
+  const handleMarkAsReturned = async () => {
+    if (!window.confirm('Mark this equipment as returned and make it available for booking?')) return;
+    
+    try {
+      setLoading(true);
+      await apiRequest(`/equipment/${item.id}`, 'PUT', {
+        status: 'available',
+        booked_till: null
+      });
+      alert('Equipment marked as returned successfully!');
+      setEquipmentData({
+        ...equipmentData,
+        status: 'available',
+        booked_till: null,
+        reservation_status: null
+      });
+    } catch (error) {
+      alert('Failed to mark equipment as returned: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const allReviews = item.reviewsData || [];
@@ -72,18 +113,29 @@ const GearDetails = ({ item, onBack }) => {
                     </div>
                   </div>
 
-                  <button 
-                    className={`btn-primary booking ${!item.isAvailable ? 'disabled' : ''}`}
-                    onClick={() => setShowReservationForm(true)}
-                    disabled={!item.isAvailable}
-                  >
-                    {item.isAvailable ? "Reserve Now" : `Booked until ${item.availableDate}`}
-                  </button>
-                  
-                  {!item.isAvailable && (
-                    <button className="btn-secondary wishlist-btn">
-                      Advance Booking
-                    </button>
+                  {hasActiveReservation() ? (
+                    <>
+                      <div className="booked-info">
+                        <span className="booked-date">⏰ Booked Till: {item.booked_till ? new Date(item.booked_till).toLocaleDateString() : 'Date pending'}</span>
+                      </div>
+                      <button 
+                        className="btn-primary booking"
+                        onClick={handleMarkAsReturned}
+                        disabled={loading}
+                      >
+                        {loading ? 'Processing...' : '✅ Mark as Returned'}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button 
+                        className={`btn-primary booking ${!isAvailable() ? 'disabled' : ''}`}
+                        onClick={() => setShowReservationForm(true)}
+                        disabled={!isAvailable()}
+                      >
+                        {isAvailable() ? "Reserve Now" : "Not Available"}
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

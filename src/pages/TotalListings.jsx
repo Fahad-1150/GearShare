@@ -1,31 +1,102 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './TotalListings.css';
 import GearCard from '../components/GearCard';
 import Footer from '../components/Footer';
-
-import { listings as mockListings } from '../data/listings';
+import { apiRequest } from '../utils/api';
+import EquipmentDetailModal from '../components/EquipmentDetailModal';
 
 const TotalListings = ({ onNavigate }) => {
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ name: '', category: 'any', location: '', availability: 'any' });
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
+
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  const fetchListings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiRequest('/equipment/');
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        throw new Error(err.detail || `Server error: ${response.status}`);
+      }
+      const data = await response.json();
+      // Map data to include image URLs from photo_binary
+      const mappedData = data.map(item => {
+        const isPng = item.photo_binary && item.photo_binary.startsWith('iVBOR');
+        const mimeType = isPng ? 'image/png' : 'image/jpeg';
+        const imageUrl = item.photo_binary 
+          ? `data:${mimeType};base64,${item.photo_binary}` 
+          : (item.photo_url || "https://via.placeholder.com/300x200?text=No+Image");
+        return { ...item, image: imageUrl };
+      });
+      setListings(mappedData);
+    } catch (err) {
+      console.error('Error fetching listings:', err);
+      setError('Failed to load listings: ' + (err.message || 'Unknown error'));
+      setListings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtered = useMemo(() => {
-    return mockListings.filter((l) => {
+    return listings.filter((l) => {
       if (filters.name && !l.name.toLowerCase().includes(filters.name.trim().toLowerCase())) return false;
       if (filters.category !== 'any' && l.category !== filters.category) return false;
-      if (filters.location && !l.location.toLowerCase().includes(filters.location.trim().toLowerCase())) return false;
-      if (filters.availability === 'available' && !l.isAvailable) return false;
-      if (filters.availability === 'booked' && l.isAvailable) return false;
+      if (filters.location && !l.pickup_location?.toLowerCase().includes(filters.location.trim().toLowerCase())) return false;
+      if (filters.availability === 'available' && l.status !== 'available') return false;
+      if (filters.availability === 'booked' && l.status === 'available') return false;
       return true;
     });
-  }, [filters]);
+  }, [filters, listings]);
 
   const onChange = (k) => (e) => setFilters((p) => ({ ...p, [k]: e.target.value }));
   const reset = () => setFilters({ name: '', category: 'any', location: '', availability: 'any' });
 
-  const categories = Array.from(new Set(mockListings.map(l => l.category)));
+  const categories = Array.from(new Set(listings.map(l => l.category)));
 
   return (
     <div className="total-listings-page">
+      {selectedEquipment && (
+        <EquipmentDetailModal
+          equipment={selectedEquipment}
+          onClose={() => setSelectedEquipment(null)}
+          onSave={async (updatedData) => {
+            try {
+              const formData = new FormData();
+              formData.append('name', updatedData.name);
+              formData.append('category', updatedData.category);
+              formData.append('daily_price', updatedData.daily_price);
+              formData.append('pickup_location', updatedData.pickup_location);
+              formData.append('photo_url', updatedData.photo_url);
+              formData.append('status', updatedData.status);
+
+              const response = await apiRequest(`/equipment/${selectedEquipment.equipment_id}`, {
+                method: 'PUT',
+                headers: { 'owner_username': selectedEquipment.owner_username }, // Admin impersonating owner
+                body: formData
+              });
+
+              if (response.ok) {
+                alert('Equipment updated successfully');
+                fetchListings(); // Refresh list
+                setSelectedEquipment(null);
+              } else {
+                alert('Failed to update equipment');
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Error updating equipment');
+            }
+          }}
+        />
+      )}
       <div className="page-header">
         <h2>All Listings</h2>
         <p className="muted">Manage platform listings — view, filter, or inspect gear cards.</p>
@@ -47,19 +118,23 @@ const TotalListings = ({ onNavigate }) => {
       </div>
 
       <div className="listings-grid">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="table-placeholder">Loading listings...</div>
+        ) : error ? (
+          <div className="table-placeholder">Error: {error}</div>
+        ) : filtered.length === 0 ? (
           <div className="table-placeholder">No listings match the filters.</div>
         ) : (
           filtered.map((l) => (
             <div
-              key={l.id}
+              key={l.equipment_id}
               className="listing-card"
               role="button"
               tabIndex={0}
-              onClick={() => onNavigate(`/gear/${l.id}`)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onNavigate(`/gear/${l.id}`); }}
+              onClick={() => setSelectedEquipment(l)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedEquipment(l); }}
             >
-              <GearCard item={{ ...l }} />
+              <GearCard item={{ ...l, id: l.equipment_id, isAvailable: l.status === 'available', location: l.pickup_location }} />
             </div>
           ))
         )}

@@ -112,8 +112,9 @@ const ReservationForm = ({ equipment, onClose, onSuccess }) => {
       }
     } catch (err) {
       console.error('Reservation submission error:', err);
-      setError(err.message || 'Failed to create reservation. Please try again.');
-      console.error('Reservation error:', err);
+      const errorMsg = err.message || 'Failed to create reservation. Please check if FastAPI server is running on http://127.0.0.1:8000';
+      setError(errorMsg);
+      console.error('Reservation error details:', err);
     } finally {
       setLoading(false);
     }

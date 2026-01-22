@@ -99,6 +99,8 @@ async def update_equipment(
     category: str = Form(None),
     daily_price: float = Form(None),
     pickup_location: str = Form(None),
+    photo_url: str = Form(None),
+    status: str = Form(None),
     photo: UploadFile = File(None),
     owner_username: str = Header(..., alias="owner_username"),
     db: AsyncSession = Depends(get_db)
@@ -122,6 +124,10 @@ async def update_equipment(
         equipment.daily_price = daily_price
     if pickup_location is not None:
         equipment.pickup_location = pickup_location
+    if photo_url is not None:
+        equipment.photo_url = photo_url
+    if status is not None:
+        equipment.status = status
     
     if photo:
         contents = await photo.read()

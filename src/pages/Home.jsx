@@ -129,6 +129,8 @@ const Home = () => {
             owner: item.owner_username,
             ownerId: `OWN-${item.equipment_id}`,
             location: item.pickup_location || "Location not specified",
+            status: item.status || 'available',
+            booked_till: item.booked_till,
             isAvailable: item.status === 'available',
             availableDate: item.booked_till,
             reviewsData: []

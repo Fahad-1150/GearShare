@@ -8,6 +8,8 @@ from .database import engine, Base
 from .auth import router as auth_router
 from .equipment import router as equipment_router
 from .reservation import router as reservation_router
+from .users import router as users_router
+from .reports import router as reports_router
 # Create static directory for images if it doesn't exist
 # This must be done BEFORE app.mount is called to prevent RuntimeError
 os.makedirs("static/images", exist_ok=True)
@@ -46,7 +48,14 @@ async def root():
 # Include authentication routes
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 
+# Include users routes
+app.include_router(users_router, prefix="/users", tags=["Users"])
+
 # Include equipment routes
 app.include_router(equipment_router, prefix="/equipment", tags=["Equipment"])
+
 # Include reservation routes
 app.include_router(reservation_router, prefix="/reservation", tags=["Reservation"])
+
+# Include reports routes
+app.include_router(reports_router, prefix="/reports", tags=["Reports"])

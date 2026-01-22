@@ -1,159 +1,253 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ActiveRentals.css';
 import Footer from '../components/Footer';
+import { apiRequest } from '../utils/api';
 
 const ActiveRentals = ({ userData, onNavigate }) => {
-  const [activeRentals, setActiveRentals] = useState([
-    { id: 'R002', user: 'Jane Smith', userEmail: 'jane@email.com', item: 'DJI Mavic 3', owner: 'Tech Rentals', startDate: '2026-01-03', endDate: '2026-01-07', amount: '$200', daysLeft: 2 },
-    { id: 'R004', user: 'Sarah Wilson', userEmail: 'sarah@email.com', item: 'GoPro Hero 12', owner: 'Adventure Gear', startDate: '2026-01-05', endDate: '2026-01-08', amount: '$80', daysLeft: 3 },
-    { id: 'R007', user: 'Alex Turner', userEmail: 'alex@email.com', item: 'Sony FX3', owner: 'Pro Cinema', startDate: '2026-01-04', endDate: '2026-01-11', amount: '$350', daysLeft: 6 },
-    { id: 'R008', user: 'Lisa Chen', userEmail: 'lisa@email.com', item: 'Blackmagic 6K', owner: 'Film Supply Co', startDate: '2026-01-06', endDate: '2026-01-13', amount: '$280', daysLeft: 8 },
-    { id: 'R009', user: 'David Kim', userEmail: 'david@email.com', item: 'Aputure 600d', owner: 'Light Masters', startDate: '2026-01-07', endDate: '2026-01-10', amount: '$120', daysLeft: 5 },
-  ]);
-
+  const [activeRentals, setActiveRentals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterDays, setFilterDays] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [daysFilter, setDaysFilter] = useState('all');
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
 
-  const handleExtendRental = (rentalId) => {
-    alert(`Extend rental ${rentalId} - A modal would open to select new end date`);
-  };
+  useEffect(() => {
+    fetchActiveRentals();
+    checkExpiredRentals();
+  }, []);
 
-  const handleEndRental = (rentalId) => {
-    if (confirm(`Are you sure you want to end rental ${rentalId}?`)) {
-      setActiveRentals(activeRentals.filter(r => r.id !== rentalId));
-      alert(`Rental ${rentalId} has been ended successfully`);
+  const checkExpiredRentals = async () => {
+    try {
+      await apiRequest('/reservation/update-expired-rentals', {
+        method: 'POST'
+      });
+    } catch (err) {
+      console.warn('Could not update expired rentals:', err);
     }
   };
 
-  const handleContactRenter = (email, rentalId) => {
-    alert(`Opening email to ${email} regarding rental ${rentalId}`);
+  const fetchActiveRentals = async () => {
+    try {
+      setLoading(true);
+      const response = await apiRequest('/reservation/');
+      if (!response.ok) throw new Error('Failed to fetch rentals');
+      const data = await response.json();
+      
+      // Filter for active rentals and calculate days left
+      const activeRentalsData = data
+        .filter(r => r.status === 'active' || r.status === 'pending')
+        .map(r => {
+          const today = new Date();
+          const endDate = new Date(r.end_date);
+          const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+          return {
+            ...r,
+            daysLeft: Math.max(0, daysLeft)
+          };
+        });
+      
+      setActiveRentals(activeRentalsData);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching rentals:', err);
+      setError('Failed to load active rentals');
+      setActiveRentals([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAcceptReservation = async (rentalId, rental) => {
+    try {
+      const response = await apiRequest(`/reservation/${rentalId}`, {
+        method: 'PUT',
+        headers: { 'owner_username': rental.owner_username },
+        body: JSON.stringify({ status: 'active' })
+      });
+      
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        throw new Error(err.detail || 'Failed to accept reservation');
+      }
+      
+      setActiveRentals(activeRentals.map(r =>
+        r.reservation_id === rentalId ? { ...r, status: 'active' } : r
+      ));
+      alert(`✅ Reservation ${rentalId} accepted! Equipment marked as BOOKED until ${new Date(rental.end_date).toLocaleDateString()}`);
+    } catch (err) {
+      console.error('Error accepting reservation:', err);
+      alert('Failed to accept reservation: ' + (err.message || 'Unknown error'));
+    }
+  };
+
+  const handleRejectReservation = async (rentalId) => {
+    if (!confirm('Are you sure you want to reject this reservation?')) return;
+    
+    try {
+      const rental = activeRentals.find(r => r.reservation_id === rentalId);
+      const response = await apiRequest(`/reservation/${rentalId}`, {
+        method: 'PUT',
+        headers: { 'owner_username': rental.owner_username },
+        body: JSON.stringify({ status: 'cancelled' })
+      });
+      
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        throw new Error(err.detail || 'Failed to reject reservation');
+      }
+      
+      setActiveRentals(activeRentals.map(r =>
+        r.reservation_id === rentalId ? { ...r, status: 'cancelled' } : r
+      ));
+      alert(`❌ Reservation ${rentalId} rejected! Equipment remains available.`);
+    } catch (err) {
+      console.error('Error rejecting reservation:', err);
+      alert('Failed to reject reservation: ' + (err.message || 'Unknown error'));
+    }
   };
 
   const filteredRentals = activeRentals.filter(rental => {
-    const matchesSearch = rental.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         rental.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         rental.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = 
+      rental.reserver_username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rental.owner_username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(rental.reservation_id).toLowerCase().includes(searchTerm.toLowerCase());
     
-    if (filterDays === 'all') return matchesSearch;
-    if (filterDays === 'urgent') return matchesSearch && rental.daysLeft <= 2;
-    if (filterDays === 'soon') return matchesSearch && rental.daysLeft <= 4;
-    return matchesSearch;
+    const matchesStatus = statusFilter === 'all' || rental.status === statusFilter;
+    
+    let matchesDays = true;
+    if (daysFilter === 'urgent') matchesDays = rental.daysLeft <= 2;
+    else if (daysFilter === 'soon') matchesDays = rental.daysLeft <= 7;
+    else if (daysFilter === 'coming') matchesDays = rental.daysLeft > 7;
+    
+    return matchesSearch && matchesStatus && matchesDays;
   });
 
-  const totalValue = activeRentals.reduce((sum, r) => sum + parseInt(r.amount.replace('$', '')), 0);
-  const endingSoon = activeRentals.filter(r => r.daysLeft <= 2).length;
+  const totalValue = filteredRentals.reduce((sum, r) => sum + parseFloat(r.total_price || 0), 0);
+  const pendingCount = filteredRentals.filter(r => r.status === 'pending').length;
 
   return (
     <div className="full-page">
       <div className="active-rentals-page">
         <div className="page-header">
-          <div className="header-left">
-            <button className="back-btn" onClick={() => onNavigate('/admin')}>
-              ← Back to Dashboard
-            </button>
-            <h1>Active Rentals</h1>
-            <p>Manage all currently active rental transactions</p>
-          </div>
+          <h2>🚀 Active Rentals</h2>
+          <p>Manage all rental transactions and reservations</p>
         </div>
 
         <div className="stats-row">
           <div className="stat-card">
             <span className="stat-icon">📦</span>
             <div className="stat-info">
-              <span className="stat-number">{activeRentals.length}</span>
-              <span className="stat-text">Active Rentals</span>
+              <span className="stat-number">{filteredRentals.length}</span>
+              <span className="stat-text">Total Rentals</span>
+            </div>
+          </div>
+          <div className="stat-card">
+            <span className="stat-icon">⏳</span>
+            <div className="stat-info">
+              <span className="stat-number">{pendingCount}</span>
+              <span className="stat-text">Pending Approval</span>
             </div>
           </div>
           <div className="stat-card">
             <span className="stat-icon">💵</span>
             <div className="stat-info">
-              <span className="stat-number">${totalValue}</span>
+              <span className="stat-number">${totalValue.toFixed(2)}</span>
               <span className="stat-text">Total Value</span>
-            </div>
-          </div>
-          <div className="stat-card warning">
-            <span className="stat-icon">⚠️</span>
-            <div className="stat-info">
-              <span className="stat-number">{endingSoon}</span>
-              <span className="stat-text">Ending Soon</span>
             </div>
           </div>
         </div>
 
         <div className="filters-section">
-          <input
-            type="text"
-            placeholder="Search by user, item, or rental ID..."
-            className="search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <select
-            className="filter-select"
-            value={filterDays}
-            onChange={(e) => setFilterDays(e.target.value)}
-          >
-            <option value="all">All Rentals</option>
-            <option value="urgent">Urgent (≤2 days)</option>
-            <option value="soon">Ending Soon (≤4 days)</option>
-          </select>
+          <div className="search-row">
+            <input
+              type="text"
+              placeholder="Search by user, owner, or ID..."
+              className="search-input"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="filter-row">
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="filter-select">
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+            </select>
+            <select value={daysFilter} onChange={(e) => setDaysFilter(e.target.value)} className="filter-select">
+              <option value="all">All Days</option>
+              <option value="urgent">Urgent (≤2 days)</option>
+              <option value="soon">Soon (≤7 days)</option>
+              <option value="coming">Coming (&gt;7 days)</option>
+            </select>
+          </div>
         </div>
 
         <div className="table-container">
           <table className="rentals-table">
             <thead>
               <tr>
-                <th>Rental ID</th>
-                <th>Renter</th>
-                <th>Item</th>
+                <th>ID</th>
+                <th>Equipment</th>
                 <th>Owner</th>
+                <th>Reserver</th>
                 <th>Start Date</th>
                 <th>End Date</th>
+                <th>Per Day</th>
+                <th>Total</th>
+                <th>Status</th>
                 <th>Days Left</th>
-                <th>Amount</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredRentals.map((rental) => (
-                <tr key={rental.id} className={rental.daysLeft <= 2 ? 'urgent-row' : ''}>
-                  <td><span className="rental-id">{rental.id}</span></td>
-                  <td>
-                    <div className="user-cell">
-                      <span className="user-name">{rental.user}</span>
-                      <span className="user-email">{rental.userEmail}</span>
-                    </div>
-                  </td>
-                  <td><strong>{rental.item}</strong></td>
-                  <td>{rental.owner}</td>
-                  <td>{rental.startDate}</td>
-                  <td>{rental.endDate}</td>
-                  <td>
-                    <span className={`days-badge ${rental.daysLeft <= 2 ? 'urgent' : rental.daysLeft <= 4 ? 'warning' : 'normal'}`}>
-                      {rental.daysLeft} days
-                    </span>
-                  </td>
-                  <td><strong>{rental.amount}</strong></td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="action-btn extend-btn" onClick={() => handleExtendRental(rental.id)}>
-                        🔄 Extend
-                      </button>
-                      <button className="action-btn contact-btn" onClick={() => handleContactRenter(rental.userEmail, rental.id)}>
-                        ✉️
-                      </button>
-                      <button className="action-btn end-btn" onClick={() => handleEndRental(rental.id)}>
-                        ⏹️ End
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {loading ? (
+                <tr><td colSpan="11" style={{ textAlign: 'center', padding: '20px' }}>⏳ Loading rentals...</td></tr>
+              ) : error ? (
+                <tr><td colSpan="11" style={{ textAlign: 'center', padding: '20px', color: 'red' }}>❌ {error}</td></tr>
+              ) : filteredRentals.length === 0 ? (
+                <tr><td colSpan="11" style={{ textAlign: 'center', padding: '20px' }}>📭 No rentals match filters</td></tr>
+              ) : (
+                filteredRentals.map((rental) => (
+                  <tr key={rental.reservation_id} className={rental.status === 'pending' ? 'pending-row' : ''}>
+                    <td><span className="id-badge">{rental.reservation_id}</span></td>
+                    <td>{rental.equipment_id}</td>
+                    <td><strong>{rental.owner_username}</strong></td>
+                    <td>{rental.reserver_username}</td>
+                    <td>{new Date(rental.start_date).toLocaleDateString()}</td>
+                    <td>{new Date(rental.end_date).toLocaleDateString()}</td>
+                    <td>${rental.per_day_price}</td>
+                    <td><strong>${rental.total_price?.toFixed(2)}</strong></td>
+                    <td>
+                      <span className={`status-badge status-${rental.status}`}>
+                        {rental.status.charAt(0).toUpperCase() + rental.status.slice(1)}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`days-badge ${rental.daysLeft <= 2 ? 'urgent' : rental.daysLeft <= 7 ? 'warning' : 'normal'}`}>
+                        {rental.daysLeft} days
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        {rental.status === 'pending' && (
+                          <>
+                            <button className="action-btn accept-btn" onClick={() => handleAcceptReservation(rental.reservation_id, rental)}>✅ Accept</button>
+                            <button className="action-btn reject-btn" onClick={() => handleRejectReservation(rental.reservation_id)}>❌ Reject</button>
+                          </>
+                        )}
+                        {rental.status === 'active' && (
+                          <button className="action-btn complete-btn" onClick={() => alert('Mark as completed - TODO')}>✔️ Complete</button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
-          {filteredRentals.length === 0 && (
-            <div className="no-results">No rentals found matching your criteria</div>
-          )}
         </div>
       </div>
       <Footer />
