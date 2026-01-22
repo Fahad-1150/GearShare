@@ -1,0 +1,401 @@
+================================================================================
+                        GEARSHARE - COMPLETE SETUP GUIDE
+================================================================================
+
+PROJECT STRUCTURE:
+├── Frontend (React + Vite)
+│   ├── src/
+│   │   ├── pages/
+│   │   ├── components/
+│   │   ├── utils/
+│   │   └── App.jsx
+│   └── vite.config.js
+│
+├── Backend (FastAPI + PostgreSQL)
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── models.py
+│   │   ├── database.py
+│   │   ├── auth.py
+│   │   ├── users.py
+│   │   ├── equipment.py
+│   │   ├── reservation.py
+│   │   ├── reports.py
+│   │   ├── security.py
+│   │   └── schemas.py
+│   ├── requirements.txt
+│   └── .env
+│
+└── SQL Tables
+    ├── User table
+    ├── Equipment table
+    └── Reservation table
+
+================================================================================
+                        DATABASE SETUP (PostgreSQL)
+================================================================================
+
+IMPORTANT: Ensure PostgreSQL is installed and running before proceeding.
+
+--- TABLE 1: USER TABLE ---
+
+CREATE TABLE "User" (
+    "UserName_PK" VARCHAR(255) PRIMARY KEY,
+    "Email" VARCHAR(255) UNIQUE NOT NULL,
+    "Password" VARCHAR(255) NOT NULL,
+    "Role" VARCHAR(50) DEFAULT 'User',
+    "Location" TEXT,
+    "VerificationStatus" BOOLEAN DEFAULT TRUE,
+    "CreatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "UpdatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_user_email ON "User"("Email");
+CREATE INDEX idx_user_role ON "User"("Role");
+
+
+--- TABLE 2: EQUIPMENT TABLE ---
+
+CREATE TABLE equipment (
+    equipment_id SERIAL PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    photo_url TEXT,
+    photo_binary BYTEA,
+    owner_username VARCHAR(255) NOT NULL,
+    category VARCHAR(100),
+    daily_price NUMERIC(10,2) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'available',
+    booked_till DATE,
+    pickup_location VARCHAR(255),
+    rating_avg NUMERIC(2,1) DEFAULT 0.0,
+    rating_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_equipment_owner
+        FOREIGN KEY (owner_username)
+        REFERENCES "User"(UserName_PK)
+        ON DELETE CASCADE,
+    
+    CONSTRAINT chk_status
+        CHECK (status IN ('available', 'booked', 'unavailable'))
+);
+
+CREATE INDEX idx_equipment_owner ON equipment(owner_username);
+CREATE INDEX idx_equipment_category ON equipment(category);
+CREATE INDEX idx_equipment_status ON equipment(status);
+
+
+--- TABLE 3: RESERVATION TABLE ---
+
+CREATE TABLE reservation (
+    reservation_id SERIAL PRIMARY KEY,
+    equipment_id INTEGER NOT NULL,
+    owner_username VARCHAR(255) NOT NULL,
+    reserver_username VARCHAR(255) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    per_day_price NUMERIC(10,2) NOT NULL,
+    total_price NUMERIC(12,2) NOT NULL,
+    review_id INTEGER NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_reservation_owner
+        FOREIGN KEY (owner_username)
+        REFERENCES "User"("UserName_PK")
+        ON DELETE CASCADE,
+    
+    CONSTRAINT fk_reservation_reserver
+        FOREIGN KEY (reserver_username)
+        REFERENCES "User"("UserName_PK")
+        ON DELETE CASCADE,
+    
+    CONSTRAINT fk_reservation_equipment
+        FOREIGN KEY (equipment_id)
+        REFERENCES equipment(equipment_id)
+        ON DELETE CASCADE,
+    
+    CONSTRAINT chk_reservation_status
+        CHECK (status IN ('pending','running','returned','completed'))
+);
+
+CREATE INDEX idx_reservation_owner ON reservation(owner_username);
+CREATE INDEX idx_reservation_reserver ON reservation(reserver_username);
+CREATE INDEX idx_reservation_equipment ON reservation(equipment_id);
+CREATE INDEX idx_reservation_status ON reservation(status);
+
+================================================================================
+                        QUICK DATABASE SETUP (pgAdmin)
+================================================================================
+
+1. Open pgAdmin
+2. Create a new database named "GearShare"
+3. Open Query Tool
+4. Copy and paste each SQL table creation script above
+5. Execute each script
+
+Alternative (Command Line):
+    psql -U postgres
+    CREATE DATABASE GearShare;
+    \c GearShare
+    -- Copy and paste each table SQL above
+    -- Execute each one
+
+================================================================================
+                        FASTAPI REQUIREMENTS
+================================================================================
+
+Python Version: 3.8+
+
+Required Packages (from requirements.txt):
+- fastapi
+- uvicorn[standard]
+- aiosqlite
+- passlib[bcrypt]
+- python-jose
+- pydantic
+- sqlalchemy
+- python-dotenv
+
+================================================================================
+                        FASTAPI SETUP INSTRUCTIONS
+================================================================================
+
+STEP 1: Install Python Dependencies
+-----------------------------------------
+cd FastAPI
+pip install -r requirements.txt
+
+STEP 2: Configure Environment Variables
+-----------------------------------------
+Create or update .env file in FastAPI/ directory:
+
+DATABASE_URL=postgresql+asyncpg://postgres:your_password@localhost:5432/GearShare
+JWT_SECRET=your_secret_key_here
+CORS_ORIGINS=*
+
+NOTE: Replace "your_password" with your PostgreSQL password
+
+STEP 3: Verify Database Connection
+-----------------------------------------
+The application will automatically create tables on startup using SQLAlchemy models.
+If you want to verify manually, use pgAdmin or psql to check.
+
+STEP 4: Start FastAPI Server
+-----------------------------------------
+From FastAPI/ directory:
+
+uvicorn app.main:app --reload --port 8000
+
+The API will be available at: http://localhost:8000
+Swagger UI (API Docs): http://localhost:8000/docs
+ReDoc (Alternative Docs): http://localhost:8000/redoc
+
+================================================================================
+                        FASTAPI ROUTER MODULES
+================================================================================
+
+Authentication Routes (/auth):
+    - POST /auth/signup     : Register new user
+    - POST /auth/login      : Login user
+
+Equipment Routes (/equipment):
+    - GET /equipment/       : Get all equipment
+    - GET /equipment/{id}   : Get specific equipment
+    - POST /equipment/      : Create new equipment
+    - PUT /equipment/{id}   : Update equipment
+    - DELETE /equipment/{id}: Delete equipment
+    - GET /equipment/owner/{username}: Get user's equipment
+
+Reservation Routes (/reservation):
+    - GET /reservation/     : Get all reservations
+    - GET /reservation/{id} : Get specific reservation
+    - POST /reservation/    : Create reservation
+    - PUT /reservation/{id} : Update reservation
+    - DELETE /reservation/{id}: Delete reservation
+    - GET /reservation/owner/{username}: Get reservations where user is owner
+    - GET /reservation/reserver/{username}: Get reservations where user is renter
+
+User Routes (/users):
+    - GET /users/          : Get all users
+    - GET /users/{username}: Get specific user
+    - PUT /users/{username}: Update user profile
+
+Reports Routes (/reports):
+    - Rental reports
+    - Revenue reports
+    - User analytics
+
+================================================================================
+                        FRONTEND SETUP INSTRUCTIONS
+================================================================================
+
+STEP 1: Install Dependencies
+-----------------------------------------
+npm install
+
+STEP 2: Start Development Server
+-----------------------------------------
+npm run dev
+
+The frontend will be available at: http://localhost:5173
+
+STEP 3: Build for Production
+-----------------------------------------
+npm run build
+
+================================================================================
+                        PROJECT STARTUP SEQUENCE
+================================================================================
+
+1. START POSTGRESQL:
+   - Ensure PostgreSQL service is running
+   - Create GearShare database (if not already created)
+
+2. RUN FASTAPI SERVER:
+   cd FastAPI
+   uvicorn app.main:app --reload --port 8000
+   
+   Expected output: "Uvicorn running on http://127.0.0.1:8000"
+
+3. RUN REACT FRONTEND:
+   npm run dev
+   
+   Expected output: "VITE v... ready in ... ms"
+
+4. VERIFY BOTH ARE RUNNING:
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8000
+   - API Docs: http://localhost:8000/docs
+
+================================================================================
+                        KEY FEATURES IMPLEMENTED
+================================================================================
+
+✓ User Authentication (Signup/Login with JWT)
+✓ Equipment Management (CRUD operations)
+✓ Equipment Status Tracking (available, booked, unavailable)
+✓ Booked Till Date Storage
+✓ Reservation System (pending, running, returned, completed)
+✓ Automatic Equipment Status Updates
+✓ Equipment becomes BOOKED when reservation is accepted
+✓ Equipment becomes AVAILABLE when reservation is completed/returned
+✓ Owner can hide their own equipment from browse view
+✓ Status filters (All, Available, Not Available)
+✓ Category filters
+✓ Search functionality
+✓ User dashboard with analytics
+✓ Rental history tracking
+✓ Equipment ratings and reviews
+
+================================================================================
+                        IMPORTANT NOTES
+================================================================================
+
+1. DATABASE:
+   - Tables are auto-created on FastAPI startup using SQLAlchemy ORM
+   - Foreign keys ensure data integrity
+   - Status fields have CHECK constraints
+
+2. CORS:
+   - Currently allows all origins ("*")
+   - In production, specify exact origins
+
+3. JWT SECURITY:
+   - Change JWT_SECRET in .env to a strong value
+   - Never commit .env to version control
+
+4. STATIC FILES:
+   - Equipment photos stored in static/images/
+   - Ensure directory exists or is created on startup
+
+5. RESERVATIONS:
+   - Equipment status updates automatically based on reservation status
+   - When owner accepts: status = 'booked', booked_till = end_date
+   - When equipment returned: status = 'available', booked_till = null
+
+6. API ENDPOINTS:
+   - All endpoints require proper authentication headers
+   - Use JWT token from login/signup responses
+
+================================================================================
+                        TROUBLESHOOTING
+================================================================================
+
+ERROR: "Cannot connect to database"
+- Check PostgreSQL is running
+- Verify DATABASE_URL in .env
+- Ensure GearShare database exists
+
+ERROR: "Port 8000 already in use"
+- Use different port: uvicorn app.main:app --port 8001
+- Or kill process using port 8000
+
+ERROR: "Tables not created"
+- Tables auto-create on startup
+- Check database connection
+- Verify models.py is correct
+
+ERROR: "CORS blocked in frontend"
+- Check CORS_ORIGINS in .env
+- Currently set to "*" (allow all)
+
+ERROR: "Static files not found"
+- Ensure static/images/ directory exists
+- Check FastAPI app.mount() configuration
+
+================================================================================
+                        DATABASE CREDENTIALS TEMPLATE
+================================================================================
+
+Update these in FastAPI/.env file:
+
+DATABASE_URL=postgresql+asyncpg://[USERNAME]:[PASSWORD]@localhost:5432/GearShare
+
+Default PostgreSQL:
+- Username: postgres
+- Password: (set during installation)
+
+Example (DO NOT USE IN PRODUCTION):
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/GearShare
+
+================================================================================
+                        FINAL CHECKLIST
+================================================================================
+
+Before running the application:
+
+[ ] PostgreSQL installed and running
+[ ] GearShare database created
+[ ] FastAPI/.env configured with database credentials
+[ ] All SQL tables created (or will auto-create)
+[ ] Python 3.8+ installed
+[ ] Node.js and npm installed
+[ ] FastAPI requirements installed (pip install -r requirements.txt)
+[ ] React dependencies installed (npm install)
+[ ] Port 8000 available for FastAPI
+[ ] Port 5173 available for React (or use npm run dev default)
+
+If all checks pass, run:
+1. uvicorn app.main:app --reload --port 8000
+2. npm run dev
+
+Application ready at http://localhost:5173
+
+================================================================================
+                        CONTACT & SUPPORT
+================================================================================
+
+Project: GearShare - Peer-to-Peer Equipment Rental Platform
+Version: 1.0.0
+Last Updated: January 22, 2026
+
+For issues, check:
+1. Database connection (PostgreSQL running)
+2. Environment variables (.env file)
+3. API documentation (/docs endpoint)
+4. FastAPI logs for detailed errors
+
+================================================================================
