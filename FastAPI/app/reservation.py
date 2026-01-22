@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from datetime import date
 
 from .database import get_db
@@ -182,3 +182,66 @@ async def delete_reservation(
     await db.commit()
     
     return {"message": "Reservation deleted successfully"}
+
+# GET total earnings for a user (owner)
+@router.get("/earnings/{owner_username}")
+async def get_total_earnings(
+    owner_username: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Calculate total earnings for an owner by summing all completed reservations' total_price
+    where the owner_username matches and status is 'completed'
+    """
+    result = await db.execute(
+        select(func.sum(Reservation.total_price)).where(
+            (Reservation.owner_username == owner_username) & 
+            (Reservation.status == 'completed')
+        )
+    )
+    total_earnings = result.scalar() or 0
+    
+    return {
+        "owner_username": owner_username,
+        "total_earnings": float(total_earnings),
+        "currency": "BDT"
+    }
+
+
+# GET earnings breakdown for a user (owner) - with details
+@router.get("/earnings-details/{owner_username}")
+async def get_earnings_details(
+    owner_username: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get detailed earnings breakdown for an owner including completed reservations
+    """
+    result = await db.execute(
+        select(Reservation).where(
+            (Reservation.owner_username == owner_username) & 
+            (Reservation.status == 'completed')
+        )
+    )
+    completed_reservations = result.scalars().all()
+    
+    total_earnings = sum(float(res.total_price) for res in completed_reservations)
+    
+    return {
+        "owner_username": owner_username,
+        "total_earnings": total_earnings,
+        "completed_reservations_count": len(completed_reservations),
+        "reservations": [
+            {
+                "reservation_id": res.reservation_id,
+                "equipment_id": res.equipment_id,
+                "reserver_username": res.reserver_username,
+                "start_date": res.start_date.isoformat(),
+                "end_date": res.end_date.isoformat(),
+                "total_price": float(res.total_price),
+                "status": res.status
+            }
+            for res in completed_reservations
+        ],
+        "currency": "BDT"
+    }

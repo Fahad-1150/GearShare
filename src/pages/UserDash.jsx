@@ -43,6 +43,9 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
   const [incomingReservations, setIncomingReservations] = useState([]);
   const [outgoingReservations, setOutgoingReservations] = useState([]);
   const [reservationsLoading, setReservationsLoading] = useState(false);
+  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
 
   // Review modal state
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -130,6 +133,41 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
         } catch (err) {
           console.error('Error fetching outgoing reservations:', err);
           setOutgoingReservations([]);
+        }
+
+        // Fetch total earnings for the owner
+        try {
+          const earningsResponse = await apiRequest(`/reservation/earnings/${currentUsername}`);
+          if (earningsResponse.ok) {
+            const earningsData = await earningsResponse.json();
+            console.log('Total earnings:', earningsData);
+            setTotalEarnings(earningsData.total_earnings || 0);
+          } else {
+            console.error('Failed to fetch earnings:', earningsResponse.status);
+            setTotalEarnings(0);
+          }
+        } catch (err) {
+          console.error('Error fetching earnings:', err);
+          setTotalEarnings(0);
+        }
+
+        // Fetch average rating for the owner
+        try {
+          const ratingResponse = await apiRequest(`/review/owner/${currentUsername}/average-rating`);
+          if (ratingResponse.ok) {
+            const ratingData = await ratingResponse.json();
+            console.log('Average rating:', ratingData);
+            setAverageRating(ratingData.average_rating || 0);
+            setTotalReviews(ratingData.total_reviews || 0);
+          } else {
+            console.error('Failed to fetch rating:', ratingResponse.status);
+            setAverageRating(0);
+            setTotalReviews(0);
+          }
+        } catch (err) {
+          console.error('Error fetching rating:', err);
+          setAverageRating(0);
+          setTotalReviews(0);
         }
       } catch (error) {
         console.error('Failed to fetch reservations:', error);
@@ -942,28 +980,28 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
                 <div className="overview-icon">💰</div>
                 <div className="overview-info">
                   <span className="overview-label">Total Earnings</span>
-                  <span className="overview-value">৳{listedItems.reduce((sum, item) => sum + (item.price * item.rents), 0)}</span>
+                  <span className="overview-value">৳{totalEarnings.toFixed(2)}</span>
                 </div>
               </div>
               <div className="overview-card">
                 <div className="overview-icon">📦</div>
                 <div className="overview-info">
                   <span className="overview-label">Items Listed</span>
-                  <span className="overview-value">{listedItems.length}</span>
+                  <span className="overview-value">{userEquipment.length}</span>
                 </div>
               </div>
               <div className="overview-card">
                 <div className="overview-icon">⭐</div>
                 <div className="overview-info">
                   <span className="overview-label">Your Rating</span>
-                  <span className="overview-value">{userData.rating}</span>
+                  <span className="overview-value">{averageRating.toFixed(1)} ({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})</span>
                 </div>
               </div>
               <div className="overview-card">
                 <div className="overview-icon">🔄</div>
                 <div className="overview-info">
                   <span className="overview-label">Total Rentals</span>
-                  <span className="overview-value">{userData.totalRents}</span>
+                  <span className="overview-value">{incomingReservations.length}</span>
                 </div>
               </div>
             </div>
