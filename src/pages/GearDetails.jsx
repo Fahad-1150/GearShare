@@ -118,13 +118,6 @@ const GearDetails = ({ item, onBack }) => {
                       <div className="booked-info">
                         <span className="booked-date">⏰ Booked Till: {item.booked_till ? new Date(item.booked_till).toLocaleDateString() : 'Date pending'}</span>
                       </div>
-                      <button 
-                        className="btn-primary booking"
-                        onClick={handleMarkAsReturned}
-                        disabled={loading}
-                      >
-                        {loading ? 'Processing...' : '✅ Mark as Returned'}
-                      </button>
                     </>
                   ) : (
                     <>

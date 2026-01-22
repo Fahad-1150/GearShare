@@ -94,6 +94,7 @@ const Home = () => {
   const [equipment, setEquipment] = useState(MOCK_GEAR);
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'available', 'unavailable'
 
   // Fetch equipment from API
   useEffect(() => {
@@ -152,13 +153,23 @@ const Home = () => {
     fetchEquipment();
   }, []);
 
-  // Filtering Logic
+  // Filtering Logic - Show all equipment except owner's own equipment
   const filteredGear = equipment.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
-    // If not logged in, show all equipment. If logged in, filter out own equipment.
-    const isNotOwner = currentUser ? item.owner !== currentUser : true;
-    return matchesSearch && matchesCategory && isNotOwner;
+    
+    // ONLY hide equipment if logged in user is the owner
+    const isNotOwner = !currentUser || item.owner !== currentUser;
+    
+    // Status filter
+    let matchesStatus = true;
+    if (statusFilter === 'available') {
+      matchesStatus = item.isAvailable === true;
+    } else if (statusFilter === 'unavailable') {
+      matchesStatus = item.isAvailable === false;
+    }
+    
+    return matchesSearch && matchesCategory && isNotOwner && matchesStatus;
   });
 
   const handleSearch = (e) => {
@@ -222,6 +233,57 @@ const Home = () => {
                 <span className="cat-label">{cat.name}</span>
               </button>
             ))}
+          </div>
+
+          <div className="status-filter-grid" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+            <button 
+              className={`status-btn ${statusFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('all')}
+              style={{
+                padding: '0.5rem 1rem',
+                border: statusFilter === 'all' ? '2px solid #ff6b35' : '2px solid #ddd',
+                borderRadius: '8px',
+                background: statusFilter === 'all' ? '#ff6b35' : 'white',
+                color: statusFilter === 'all' ? 'white' : '#333',
+                fontWeight: statusFilter === 'all' ? '600' : '500',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              All
+            </button>
+            <button 
+              className={`status-btn ${statusFilter === 'available' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('available')}
+              style={{
+                padding: '0.5rem 1rem',
+                border: statusFilter === 'available' ? '2px solid #10b981' : '2px solid #ddd',
+                borderRadius: '8px',
+                background: statusFilter === 'available' ? '#10b981' : 'white',
+                color: statusFilter === 'available' ? 'white' : '#333',
+                fontWeight: statusFilter === 'available' ? '600' : '500',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              ✓ Available
+            </button>
+            <button 
+              className={`status-btn ${statusFilter === 'unavailable' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('unavailable')}
+              style={{
+                padding: '0.5rem 1rem',
+                border: statusFilter === 'unavailable' ? '2px solid #ef4444' : '2px solid #ddd',
+                borderRadius: '8px',
+                background: statusFilter === 'unavailable' ? '#ef4444' : 'white',
+                color: statusFilter === 'unavailable' ? 'white' : '#333',
+                fontWeight: statusFilter === 'unavailable' ? '600' : '500',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              ✕ Not Available
+            </button>
           </div>
         </div>
       </section>

@@ -327,6 +327,17 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
 
   const handleAcceptReservation = async (reservationId) => {
     try {
+      // First, get the reservation details to extract equipment_id and end_date
+      const reservationsResponse = await apiRequest(`/reservation/${reservationId}`);
+      if (!reservationsResponse.ok) {
+        alert('Error fetching reservation details');
+        return;
+      }
+      const reservationData = await reservationsResponse.json();
+      const equipmentId = reservationData.equipment_id;
+      const bookedTillDate = reservationData.end_date;
+
+      // Update reservation status to running
       const response = await apiRequest(`/reservation/${reservationId}`, {
         method: 'PUT',
         headers: {
@@ -340,12 +351,41 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
         const err = await response.json();
         alert('Error accepting reservation: ' + (err.detail || 'Unknown error'));
       } else {
+        // Update equipment status to booked with booked_till date
+        const formData = new FormData();
+        formData.append('status', 'booked');
+        formData.append('booked_till', bookedTillDate);
+
+        try {
+          const equipmentUpdateResponse = await fetch(`http://localhost:8000/equipment/${equipmentId}`, {
+            method: 'PUT',
+            headers: {
+              'owner_username': currentUsername
+            },
+            body: formData
+          });
+
+          if (!equipmentUpdateResponse.ok) {
+            const errorData = await equipmentUpdateResponse.json();
+            console.error('Failed to update equipment status:', errorData);
+          }
+        } catch (error) {
+          console.error('Error updating equipment:', error);
+        }
+
         alert('Reservation accepted! Rental is now active.');
-        // Refresh reservations
+        // Refresh reservations and equipment
         const ownerResponse = await apiRequest(`/reservation/owner/${currentUsername}`, { method: 'GET' });
         if (ownerResponse.ok) {
           const ownerData = await ownerResponse.json();
           setIncomingReservations(Array.isArray(ownerData) ? ownerData : []);
+        }
+
+        // Refresh user equipment to update status
+        const equipmentResponse = await apiRequest(`/equipment/owner/${currentUsername}`);
+        if (equipmentResponse.ok) {
+          const equipmentData = await equipmentResponse.json();
+          setUserEquipment(equipmentData);
         }
       }
     } catch (error) {
@@ -384,6 +424,15 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
 
   const handleMarkAsReturned = async (reservationId) => {
     try {
+      // Get reservation details to find equipment_id
+      const reservationResponse = await apiRequest(`/reservation/${reservationId}`);
+      if (!reservationResponse.ok) {
+        alert('Error fetching reservation details');
+        return;
+      }
+      const reservationData = await reservationResponse.json();
+      const equipmentId = reservationData.equipment_id;
+
       const response = await apiRequest(`/reservation/${reservationId}`, {
         method: 'PUT',
         headers: {
@@ -397,12 +446,36 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
         const err = await response.json();
         alert('Error marking as returned: ' + (err.detail || 'Unknown error'));
       } else {
+        // Update equipment status back to available
+        const formData = new FormData();
+        formData.append('status', 'available');
+        formData.append('booked_till', '');
+
+        try {
+          await fetch(`http://localhost:8000/equipment/${equipmentId}`, {
+            method: 'PUT',
+            headers: {
+              'owner_username': currentUsername
+            },
+            body: formData
+          });
+        } catch (error) {
+          console.error('Error updating equipment status:', error);
+        }
+
         alert('Equipment marked as returned! Awaiting owner confirmation.');
         // Refresh reservations
         const ownerResponse = await apiRequest(`/reservation/owner/${currentUsername}`, { method: 'GET' });
         if (ownerResponse.ok) {
           const ownerData = await ownerResponse.json();
           setIncomingReservations(Array.isArray(ownerData) ? ownerData : []);
+        }
+
+        // Refresh user equipment
+        const equipmentResponse = await apiRequest(`/equipment/owner/${currentUsername}`);
+        if (equipmentResponse.ok) {
+          const equipmentData = await equipmentResponse.json();
+          setUserEquipment(equipmentData);
         }
       }
     } catch (error) {
@@ -413,6 +486,15 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
 
   const handleConfirmReturn = async (reservationId) => {
     try {
+      // Get reservation details to find equipment_id
+      const reservationResponse = await apiRequest(`/reservation/${reservationId}`);
+      if (!reservationResponse.ok) {
+        alert('Error fetching reservation details');
+        return;
+      }
+      const reservationData = await reservationResponse.json();
+      const equipmentId = reservationData.equipment_id;
+
       const response = await apiRequest(`/reservation/${reservationId}`, {
         method: 'PUT',
         headers: {
@@ -426,12 +508,36 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
         const err = await response.json();
         alert('Error confirming return: ' + (err.detail || 'Unknown error'));
       } else {
+        // Update equipment status back to available
+        const formData = new FormData();
+        formData.append('status', 'available');
+        formData.append('booked_till', '');
+
+        try {
+          await fetch(`http://localhost:8000/equipment/${equipmentId}`, {
+            method: 'PUT',
+            headers: {
+              'owner_username': currentUsername
+            },
+            body: formData
+          });
+        } catch (error) {
+          console.error('Error updating equipment status:', error);
+        }
+
         alert('Return confirmed! Rental is complete.');
         // Refresh reservations
         const ownerResponse = await apiRequest(`/reservation/owner/${currentUsername}`, { method: 'GET' });
         if (ownerResponse.ok) {
           const ownerData = await ownerResponse.json();
           setIncomingReservations(Array.isArray(ownerData) ? ownerData : []);
+        }
+
+        // Refresh user equipment
+        const equipmentResponse = await apiRequest(`/equipment/owner/${currentUsername}`);
+        if (equipmentResponse.ok) {
+          const equipmentData = await equipmentResponse.json();
+          setUserEquipment(equipmentData);
         }
       }
     } catch (error) {
