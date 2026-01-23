@@ -13,7 +13,7 @@ const AdminDash = ({ userData, onNavigate }) => {
     { label: 'Total Users', value: 0, path: '/admin/users' },
     { label: 'Total Listings', value: 0, path: '/admin/listings' },
     { label: 'Active Rentals', value: 0, path: '/admin/rentals' },
-    { label: 'Reports', value: 0, path: '/admin/reports' },
+    { label: 'Reviews', value: 0, path: '/admin/reviews' },
   ]);
   const [loading, setLoading] = useState(true);
   const [selectedEquipment, setSelectedEquipment] = useState(null);
@@ -56,7 +56,7 @@ const AdminDash = ({ userData, onNavigate }) => {
         { label: 'Total Users', value: usersData.length, path: '/admin/users' },
         { label: 'Total Listings', value: equipmentData.length, path: '/admin/listings' },
         { label: 'Active Rentals', value: activeRentals.length, path: '/admin/rentals' },
-        { label: 'Reports', value: reportsData.length, path: '/admin/reports' },
+        { label: 'Reviews', value: reportsData.length, path: '/admin/reviews' },
       ]);
     } catch (err) {
       console.error('Error fetching stats:', err);

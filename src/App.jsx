@@ -9,7 +9,7 @@ import AdminDash from './pages/AdminDash';
 import TotalUser from './pages/TotalUser';
 import TotalListings from './pages/TotalListings';
 import ActiveRentals from './pages/ActiveRentals';
-import UserReports from './pages/UserReports';
+import ReviewsAdmin from './pages/ReviewsAdmin';
 import GearDetails from './pages/GearDetails';
 import './App.css';
 
@@ -148,7 +148,7 @@ const App = () => {
           </MainLayout>
         );
 
-      case '/admin/reports':
+      case '/admin/reviews':
         if (!isLoggedIn) {
           navigateTo('/login');
           return null;
@@ -159,7 +159,7 @@ const App = () => {
         }
         return (
           <MainLayout onNavigate={navigateTo} isLoggedIn={isLoggedIn} userName={userData?.name} userData={userData} onLogout={handleLogout}>
-            <UserReports userData={userData} onNavigate={navigateTo} />
+            <ReviewsAdmin userData={userData} onNavigate={navigateTo} />
           </MainLayout>
         );
 
