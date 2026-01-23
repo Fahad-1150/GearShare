@@ -52,4 +52,4 @@ app.include_router(reservation_router, prefix="/reservation", tags=["Reservation
 app.include_router(reports_router, prefix="/reports", tags=["Reports"])
 
 # Include review routes
-app.include_router(review_router, prefix="/api", tags=["Reviews"])
+app.include_router(review_router, prefix="/review", tags=["Reviews"])

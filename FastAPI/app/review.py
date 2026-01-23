@@ -98,8 +98,27 @@ def create_review(review_data: ReviewCreate):
         conn.close()
 
 
+# GET all reviews (for admin panel)
+@router.get("/", response_model=List[ReviewResponse])
+def get_all_reviews():
+    conn = get_db()
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            SELECT review_id, reservation_id, equipment_id, reviewer_username, owner_username, 
+                   rating, comment, created_at, updated_at
+            FROM review
+            ORDER BY created_at DESC
+        """)
+        reviews = cursor.fetchall()
+        cursor.close()
+        return reviews
+    finally:
+        conn.close()
+
+
 # GET reviews for equipment
-@router.get("/review/equipment/{equipment_id}", response_model=List[ReviewResponse])
+@router.get("/equipment/{equipment_id}", response_model=List[ReviewResponse])
 def get_equipment_reviews(equipment_id: int):
     conn = get_db()
     try:
@@ -118,8 +137,82 @@ def get_equipment_reviews(equipment_id: int):
         conn.close()
 
 
+# UPDATE review (for admin)
+@router.put("/{review_id}", response_model=ReviewResponse)
+def update_review(review_id: int, review_data: ReviewCreate):
+    # Validate rating
+    if review_data.rating < 1 or review_data.rating > 5:
+        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
+    
+    conn = get_db()
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Get existing review
+        cursor.execute("""
+            SELECT review_id, equipment_id FROM review
+            WHERE review_id = %s
+        """, (review_id,))
+        existing_review = cursor.fetchone()
+        
+        if not existing_review:
+            raise HTTPException(status_code=404, detail="Review not found")
+        
+        old_equipment_id = existing_review['equipment_id']
+        
+        # Update review
+        cursor.execute("""
+            UPDATE review
+            SET reservation_id = %s, equipment_id = %s, rating = %s, comment = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE review_id = %s
+            RETURNING review_id, reservation_id, equipment_id, reviewer_username, owner_username, 
+                      rating, comment, created_at, updated_at
+        """, (review_data.reservation_id, review_data.equipment_id, review_data.rating, 
+              review_data.comment, review_id))
+        
+        updated_review = cursor.fetchone()
+        
+        # Recalculate rating for old equipment
+        cursor.execute("""
+            SELECT AVG(rating) as avg_rating, COUNT(*) as count
+            FROM review
+            WHERE equipment_id = %s
+        """, (old_equipment_id,))
+        
+        rating_data = cursor.fetchone()
+        if rating_data:
+            cursor.execute("""
+                UPDATE equipment
+                SET rating_avg = %s, rating_count = %s
+                WHERE equipment_id = %s
+            """, (float(rating_data['avg_rating']) if rating_data['avg_rating'] else 0, 
+                  rating_data['count'], old_equipment_id))
+        
+        # Recalculate rating for new equipment
+        cursor.execute("""
+            SELECT AVG(rating) as avg_rating, COUNT(*) as count
+            FROM review
+            WHERE equipment_id = %s
+        """, (review_data.equipment_id,))
+        
+        rating_data = cursor.fetchone()
+        if rating_data:
+            cursor.execute("""
+                UPDATE equipment
+                SET rating_avg = %s, rating_count = %s
+                WHERE equipment_id = %s
+            """, (float(rating_data['avg_rating']) if rating_data['avg_rating'] else 0, 
+                  rating_data['count'], review_data.equipment_id))
+        
+        conn.commit()
+        cursor.close()
+        return updated_review
+    finally:
+        conn.close()
+
+
 # GET reviews for reservation
-@router.get("/review/reservation/{reservation_id}", response_model=ReviewResponse)
+@router.get("/reservation/{reservation_id}", response_model=ReviewResponse)
 def get_reservation_review(reservation_id: int):
     conn = get_db()
     try:
@@ -142,14 +235,14 @@ def get_reservation_review(reservation_id: int):
 
 
 # DELETE review
-@router.delete("/review/{review_id}")
-def delete_review(review_id: int, reviewer_username: str):
+@router.delete("/{review_id}")
+def delete_review(review_id: int):
     conn = get_db()
     try:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
         cursor.execute("""
-            SELECT review_id, reviewer_username, equipment_id
+            SELECT review_id, equipment_id
             FROM review
             WHERE review_id = %s
         """, (review_id,))
@@ -157,9 +250,6 @@ def delete_review(review_id: int, reviewer_username: str):
         
         if not review:
             raise HTTPException(status_code=404, detail="Review not found")
-        
-        if review['reviewer_username'] != reviewer_username:
-            raise HTTPException(status_code=403, detail="Not authorized to delete this review")
         
         equipment_id = review['equipment_id']
         

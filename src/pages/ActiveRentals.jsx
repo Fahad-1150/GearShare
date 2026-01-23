@@ -12,6 +12,7 @@ const ActiveRentals = ({ userData, onNavigate }) => {
   const [daysFilter, setDaysFilter] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     fetchActiveRentals();
@@ -108,6 +109,70 @@ const ActiveRentals = ({ userData, onNavigate }) => {
     }
   };
 
+  const handleEditClick = (rental) => {
+    setEditingId(rental.reservation_id);
+    setEditData({
+      equipment_id: rental.equipment_id,
+      reserver_username: rental.reserver_username,
+      owner_username: rental.owner_username,
+      status: rental.status,
+      start_date: rental.start_date,
+      end_date: rental.end_date,
+      per_day_price: rental.per_day_price,
+      total_price: rental.total_price
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const response = await apiRequest(`/reservation/${editingId}`, {
+        method: 'PUT',
+        headers: { 'owner_username': editData.owner_username },
+        body: JSON.stringify(editData)
+      });
+      
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        throw new Error(err.detail || 'Failed to update rental');
+      }
+      
+      setActiveRentals(activeRentals.map(r =>
+        r.reservation_id === editingId 
+          ? { ...r, ...editData, daysLeft: Math.max(0, Math.ceil((new Date(editData.end_date) - new Date()) / (1000 * 60 * 60 * 24))) }
+          : r
+      ));
+      setShowEditModal(false);
+      setEditingId(null);
+      alert('✅ Rental updated successfully!');
+    } catch (err) {
+      console.error('Error updating rental:', err);
+      alert('Failed to update rental: ' + (err.message || 'Unknown error'));
+    }
+  };
+
+  const handleDeleteRental = async (rentalId) => {
+    if (!confirm('Are you sure you want to delete this rental record?')) return;
+    
+    try {
+      const rental = activeRentals.find(r => r.reservation_id === rentalId);
+      const response = await apiRequest(`/reservation/${rentalId}`, {
+        method: 'DELETE',
+        headers: { 'owner_username': rental.owner_username }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete rental');
+      }
+      
+      setActiveRentals(activeRentals.filter(r => r.reservation_id !== rentalId));
+      alert('✅ Rental deleted successfully!');
+    } catch (err) {
+      console.error('Error deleting rental:', err);
+      alert('Failed to delete rental: ' + (err.message || 'Unknown error'));
+    }
+  };
+
   const filteredRentals = activeRentals.filter(rental => {
     const matchesSearch = 
       rental.reserver_username.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -129,6 +194,94 @@ const ActiveRentals = ({ userData, onNavigate }) => {
 
   return (
     <div className="full-page">
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Rental #{editingId}</h2>
+              <button className="close-btn" onClick={() => setShowEditModal(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Equipment ID:</label>
+                <input 
+                  type="number" 
+                  value={editData.equipment_id} 
+                  onChange={(e) => setEditData({...editData, equipment_id: parseInt(e.target.value)})}
+                />
+              </div>
+              <div className="form-group">
+                <label>Owner Username:</label>
+                <input 
+                  type="text" 
+                  value={editData.owner_username} 
+                  onChange={(e) => setEditData({...editData, owner_username: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>Reserver Username:</label>
+                <input 
+                  type="text" 
+                  value={editData.reserver_username} 
+                  onChange={(e) => setEditData({...editData, reserver_username: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>Status:</label>
+                <select 
+                  value={editData.status} 
+                  onChange={(e) => setEditData({...editData, status: e.target.value})}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="active">Active</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Start Date:</label>
+                <input 
+                  type="date" 
+                  value={editData.start_date} 
+                  onChange={(e) => setEditData({...editData, start_date: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>End Date:</label>
+                <input 
+                  type="date" 
+                  value={editData.end_date} 
+                  onChange={(e) => setEditData({...editData, end_date: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>Per Day Price:</label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  value={editData.per_day_price} 
+                  onChange={(e) => setEditData({...editData, per_day_price: parseFloat(e.target.value)})}
+                />
+              </div>
+              <div className="form-group">
+                <label>Total Price:</label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  value={editData.total_price} 
+                  onChange={(e) => setEditData({...editData, total_price: parseFloat(e.target.value)})}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setShowEditModal(false)}>Cancel</button>
+              <button className="btn-save" onClick={handleSaveEdit}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="active-rentals-page">
         <div className="page-header">
           <h2>🚀 Active Rentals</h2>
@@ -153,7 +306,7 @@ const ActiveRentals = ({ userData, onNavigate }) => {
           <div className="stat-card">
             <span className="stat-icon">💵</span>
             <div className="stat-info">
-              <span className="stat-number">${totalValue.toFixed(2)}</span>
+              <span className="stat-number">{totalValue.toFixed(2)}</span>
               <span className="stat-text">Total Value</span>
             </div>
           </div>
@@ -175,6 +328,7 @@ const ActiveRentals = ({ userData, onNavigate }) => {
               <option value="pending">Pending</option>
               <option value="active">Active</option>
               <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
             </select>
             <select value={daysFilter} onChange={(e) => setDaysFilter(e.target.value)} className="filter-select">
               <option value="all">All Days</option>
@@ -218,8 +372,8 @@ const ActiveRentals = ({ userData, onNavigate }) => {
                     <td>{rental.reserver_username}</td>
                     <td>{new Date(rental.start_date).toLocaleDateString()}</td>
                     <td>{new Date(rental.end_date).toLocaleDateString()}</td>
-                    <td>${rental.per_day_price}</td>
-                    <td><strong>${rental.total_price?.toFixed(2)}</strong></td>
+                    <td>{rental.per_day_price}</td>
+                    <td><strong>{rental.total_price?.toFixed(2)}</strong></td>
                     <td>
                       <span className={`status-badge status-${rental.status}`}>
                         {rental.status.charAt(0).toUpperCase() + rental.status.slice(1)}
@@ -238,9 +392,8 @@ const ActiveRentals = ({ userData, onNavigate }) => {
                             <button className="action-btn reject-btn" onClick={() => handleRejectReservation(rental.reservation_id)}>❌ Reject</button>
                           </>
                         )}
-                        {rental.status === 'active' && (
-                          <button className="action-btn complete-btn" onClick={() => alert('Mark as completed - TODO')}>✔️ Complete</button>
-                        )}
+                        <button className="action-btn edit-btn" onClick={() => handleEditClick(rental)}>✏️ Edit</button>
+                        <button className="action-btn delete-btn" onClick={() => handleDeleteRental(rental.reservation_id)}>🗑️ Delete</button>
                       </div>
                     </td>
                   </tr>
