@@ -1,20 +1,22 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "GearShare")
-DATABASE_URL = f"postgresql+asyncpg://postgres:fdjm0881@localhost:5432/GearShare"
+# Database connection parameters
+DB_PARAMS = {
+    'host': 'localhost',
+    'database': 'GearShare',
+    'user': 'postgres',
+    'password': 'fdjm0881',
+    'port': 5432
+}
 
-engine = create_async_engine(DATABASE_URL, echo=True)
+def get_db():
+    """Create and return a database connection"""
+    return psycopg2.connect(**DB_PARAMS)
 
-AsyncSessionLocal = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
-)
+def get_db_dict():
+    """Create a database connection with RealDictCursor for dict results"""
+    conn = psycopg2.connect(**DB_PARAMS)
+    return conn, conn.cursor(cursor_factory=RealDictCursor)
 
-class Base(DeclarativeBase):
-    pass
-
-async def get_db():
-    async with AsyncSessionLocal() as session:
-        yield session

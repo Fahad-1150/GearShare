@@ -1,9 +1,6 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-
+from fastapi import APIRouter
+from psycopg2.extras import RealDictCursor
 from .database import get_db
-from .models import User
 from .schemas import UserResponse
 
 router = APIRouter()
@@ -11,26 +8,54 @@ router = APIRouter()
 
 # GET all users (admin only)
 @router.get("/", response_model=list[UserResponse])
-async def get_all_users(db: AsyncSession = Depends(get_db)):
+def get_all_users():
     """Get all users in the system"""
-    result = await db.execute(select(User))
-    users = result.scalars().all()
-    return users
+    conn = get_db()
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            SELECT "UserName_PK", "Email", "Role", "Location", "VerificationStatus", "CreatedAt"
+            FROM "User"
+        """)
+        users = cursor.fetchall()
+        cursor.close()
+        return users
+    finally:
+        conn.close()
 
 
 # GET user count
 @router.get("/count")
-async def get_user_count(db: AsyncSession = Depends(get_db)):
+def get_user_count():
     """Get total count of users"""
-    result = await db.execute(select(User))
-    users = result.scalars().all()
-    return {"count": len(users)}
+    conn = get_db()
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            SELECT COUNT(*) as count
+            FROM "User"
+        """)
+        result = cursor.fetchone()
+        cursor.close()
+        return {"count": result['count']}
+    finally:
+        conn.close()
 
 
 # GET specific user by username
 @router.get("/{username}", response_model=UserResponse)
-async def get_user(username: str, db: AsyncSession = Depends(get_db)):
+def get_user(username: str):
     """Get a specific user by username"""
-    result = await db.execute(select(User).where(User.UserName_PK == username))
-    user = result.scalar_one_or_none()
-    return user
+    conn = get_db()
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            SELECT "UserName_PK", "Email", "Role", "Location", "VerificationStatus", "CreatedAt"
+            FROM "User"
+            WHERE "UserName_PK" = %s
+        """, (username,))
+        user = cursor.fetchone()
+        cursor.close()
+        return user
+    finally:
+        conn.close()

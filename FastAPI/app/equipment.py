@@ -1,10 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, Header, File, UploadFile, Form
 import base64
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
-
+from psycopg2.extras import RealDictCursor
 from .database import get_db
-from .models import Equipment
 from .schemas import EquipmentCreate, EquipmentUpdate, EquipmentResponse
 
 router = APIRouter()
@@ -12,88 +9,138 @@ router = APIRouter()
 
 # GET all equipment
 @router.get("/", response_model=list[EquipmentResponse])
-async def get_all_equipment(
-    category: str = None,
-    user: str = None,
-    db: AsyncSession = Depends(get_db)
-):
-    if user:
-        query = select(Equipment).where(
-            or_(Equipment.status != 'unavailable', Equipment.owner_username == user)
-        )
-    else:
-        query = select(Equipment).where(Equipment.status != 'unavailable')
-    
-    if category and category != 'All':
-        query = query.where(Equipment.category == category)
-    
-    result = await db.execute(query)
-    equipment = result.scalars().all()
-    return equipment
+def get_all_equipment(category: str = None, user: str = None):
+    conn = get_db()
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        if user:
+            if category and category != 'All':
+                cursor.execute("""
+                    SELECT equipment_id, name, category, daily_price, photo_url, photo_binary,
+                           owner_username, pickup_location, status, booked_till, rating_avg, 
+                           rating_count, created_at
+                    FROM equipment
+                    WHERE (status != %s OR owner_username = %s) AND category = %s
+                """, ('unavailable', user, category))
+            else:
+                cursor.execute("""
+                    SELECT equipment_id, name, category, daily_price, photo_url, photo_binary,
+                           owner_username, pickup_location, status, booked_till, rating_avg, 
+                           rating_count, created_at
+                    FROM equipment
+                    WHERE (status != %s OR owner_username = %s)
+                """, ('unavailable', user))
+        else:
+            if category and category != 'All':
+                cursor.execute("""
+                    SELECT equipment_id, name, category, daily_price, photo_url, photo_binary,
+                           owner_username, pickup_location, status, booked_till, rating_avg, 
+                           rating_count, created_at
+                    FROM equipment
+                    WHERE status != %s AND category = %s
+                """, ('unavailable', category))
+            else:
+                cursor.execute("""
+                    SELECT equipment_id, name, category, daily_price, photo_url, photo_binary,
+                           owner_username, pickup_location, status, booked_till, rating_avg, 
+                           rating_count, created_at
+                    FROM equipment
+                    WHERE status != %s
+                """, ('unavailable',))
+        
+        equipment = cursor.fetchall()
+        cursor.close()
+        return equipment
+    finally:
+        conn.close()
 
 
 # GET equipment by ID
 @router.get("/{equipment_id}", response_model=EquipmentResponse)
-async def get_equipment(equipment_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Equipment).where(Equipment.equipment_id == equipment_id)
-    )
-    equipment = result.scalar_one_or_none()
-    
-    if not equipment:
-        raise HTTPException(status_code=404, detail="Equipment not found")
-    
-    return equipment
+def get_equipment(equipment_id: int):
+    conn = get_db()
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            SELECT equipment_id, name, category, daily_price, photo_url, photo_binary,
+                   owner_username, pickup_location, status, booked_till, rating_avg, 
+                   rating_count, created_at
+            FROM equipment
+            WHERE equipment_id = %s
+        """, (equipment_id,))
+        equipment = cursor.fetchone()
+        cursor.close()
+        
+        if not equipment:
+            raise HTTPException(status_code=404, detail="Equipment not found")
+        
+        return equipment
+    finally:
+        conn.close()
 
 
 # GET equipment by owner
 @router.get("/owner/{username}", response_model=list[EquipmentResponse])
-async def get_user_equipment(username: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Equipment).where(Equipment.owner_username == username)
-    )
-    equipment = result.scalars().all()
-    return equipment
+def get_user_equipment(username: str):
+    conn = get_db()
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            SELECT equipment_id, name, category, daily_price, photo_url, photo_binary,
+                   owner_username, pickup_location, status, booked_till, rating_avg, 
+                   rating_count, created_at
+            FROM equipment
+            WHERE owner_username = %s
+        """, (username,))
+        equipment = cursor.fetchall()
+        cursor.close()
+        return equipment
+    finally:
+        conn.close()
 
 
 # CREATE equipment
 @router.post("/", response_model=EquipmentResponse)
-async def create_equipment(
+def create_equipment(
     name: str = Form(...),
     category: str = Form(...),
     daily_price: float = Form(...),
     pickup_location: str = Form(...),
     photo: UploadFile = File(None),
-    owner_username: str = Header(..., alias="owner_username"),
-    db: AsyncSession = Depends(get_db)
+    owner_username: str = Header(..., alias="owner_username")
 ):
     photo_binary_data = None
     if photo:
+        import io
         # Read file and convert to base64
-        contents = await photo.read()
+        contents = photo.file.read()
         photo_binary_data = base64.b64encode(contents).decode("utf-8")
-
-    new_equipment = Equipment(
-        name=name,
-        category=category,
-        daily_price=daily_price,
-        photo_url=None,
-        photo_binary=photo_binary_data,
-        pickup_location=pickup_location,
-        owner_username=owner_username,
-        status='available'
-    )
     
-    db.add(new_equipment)
-    await db.commit()
-    await db.refresh(new_equipment)
-    
-    return new_equipment
+    conn = get_db()
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            INSERT INTO equipment (name, category, daily_price, photo_url, photo_binary, 
+                                  pickup_location, owner_username, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING equipment_id, name, category, daily_price, photo_url, photo_binary,
+                     owner_username, pickup_location, status, booked_till, rating_avg, 
+                     rating_count, created_at
+        """, (name, category, daily_price, None, photo_binary_data, pickup_location, 
+              owner_username, 'available'))
+        
+        new_equipment = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        return new_equipment
+    finally:
+        conn.close()
 
 
 # UPDATE equipment
 @router.put("/{equipment_id}", response_model=EquipmentResponse)
-async def update_equipment(
+def update_equipment(
     equipment_id: int,
     name: str = Form(None),
     category: str = Form(None),
@@ -102,64 +149,106 @@ async def update_equipment(
     photo_url: str = Form(None),
     status: str = Form(None),
     photo: UploadFile = File(None),
-    owner_username: str = Header(..., alias="owner_username"),
-    db: AsyncSession = Depends(get_db)
+    owner_username: str = Header(..., alias="owner_username")
 ):
-    result = await db.execute(
-        select(Equipment).where(Equipment.equipment_id == equipment_id)
-    )
-    equipment = result.scalar_one_or_none()
-    
-    if not equipment:
-        raise HTTPException(status_code=404, detail="Equipment not found")
-    
-    if equipment.owner_username != owner_username:
-        raise HTTPException(status_code=403, detail="Not authorized to update this equipment")
-    
-    if name is not None:
-        equipment.name = name
-    if category is not None:
-        equipment.category = category
-    if daily_price is not None:
-        equipment.daily_price = daily_price
-    if pickup_location is not None:
-        equipment.pickup_location = pickup_location
-    if photo_url is not None:
-        equipment.photo_url = photo_url
-    if status is not None:
-        equipment.status = status
-    
-    if photo:
-        contents = await photo.read()
-        photo_binary_data = base64.b64encode(contents).decode("utf-8")
-        equipment.photo_binary = photo_binary_data
-        equipment.photo_url = None
-
-    await db.commit()
-    await db.refresh(equipment)
-    
-    return equipment
+    conn = get_db()
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Get current equipment
+        cursor.execute("""
+            SELECT equipment_id, name, category, daily_price, photo_url, photo_binary,
+                   owner_username, pickup_location, status, booked_till, rating_avg, 
+                   rating_count, created_at
+            FROM equipment
+            WHERE equipment_id = %s
+        """, (equipment_id,))
+        equipment = cursor.fetchone()
+        
+        if not equipment:
+            raise HTTPException(status_code=404, detail="Equipment not found")
+        
+        if equipment['owner_username'] != owner_username:
+            raise HTTPException(status_code=403, detail="Not authorized to update this equipment")
+        
+        # Build update query
+        updates = {}
+        if name is not None:
+            updates['name'] = name
+        if category is not None:
+            updates['category'] = category
+        if daily_price is not None:
+            updates['daily_price'] = daily_price
+        if pickup_location is not None:
+            updates['pickup_location'] = pickup_location
+        if photo_url is not None:
+            updates['photo_url'] = photo_url
+        if status is not None:
+            updates['status'] = status
+        
+        if photo:
+            contents = photo.file.read()
+            photo_binary_data = base64.b64encode(contents).decode("utf-8")
+            updates['photo_binary'] = photo_binary_data
+            updates['photo_url'] = None
+        
+        if not updates:
+            cursor.close()
+            return equipment
+        
+        set_clauses = []
+        values = []
+        for field, value in updates.items():
+            set_clauses.append(f"{field} = %s")
+            values.append(value)
+        
+        values.append(equipment_id)
+        
+        query = f"""
+            UPDATE equipment
+            SET {', '.join(set_clauses)}
+            WHERE equipment_id = %s
+            RETURNING equipment_id, name, category, daily_price, photo_url, photo_binary,
+                     owner_username, pickup_location, status, booked_till, rating_avg, 
+                     rating_count, created_at
+        """
+        
+        cursor.execute(query, values)
+        updated_equipment = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        return updated_equipment
+    finally:
+        conn.close()
 
 
 # DELETE equipment
 @router.delete("/{equipment_id}")
-async def delete_equipment(
+def delete_equipment(
     equipment_id: int,
-    owner_username: str = Header(..., alias="owner_username"),
-    db: AsyncSession = Depends(get_db)
+    owner_username: str = Header(..., alias="owner_username")
 ):
-    result = await db.execute(
-        select(Equipment).where(Equipment.equipment_id == equipment_id)
-    )
-    equipment = result.scalar_one_or_none()
-    
-    if not equipment:
-        raise HTTPException(status_code=404, detail="Equipment not found")
-    
-    if equipment.owner_username != owner_username:
-        raise HTTPException(status_code=403, detail="Not authorized to delete this equipment")
-    
-    await db.delete(equipment)
-    await db.commit()
-    
-    return {"message": "Equipment deleted successfully"}
+    conn = get_db()
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("""
+            SELECT equipment_id, owner_username
+            FROM equipment
+            WHERE equipment_id = %s
+        """, (equipment_id,))
+        equipment = cursor.fetchone()
+        
+        if not equipment:
+            raise HTTPException(status_code=404, detail="Equipment not found")
+        
+        if equipment['owner_username'] != owner_username:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this equipment")
+        
+        cursor.execute("DELETE FROM equipment WHERE equipment_id = %s", (equipment_id,))
+        conn.commit()
+        cursor.close()
+        
+        return {"message": "Equipment deleted successfully"}
+    finally:
+        conn.close()
