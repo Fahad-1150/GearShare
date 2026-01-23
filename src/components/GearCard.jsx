@@ -33,16 +33,7 @@ const GearCard = ({ item }) => {
         </div>
 
         {/* Bottom Overlay: Availability Badge */}
-        <div className={`status-badge ${isAvailable ? 'available' : 'booked'}`}>
-          <span className="status-dot"></span>
-          {isAvailable ? (
-            'Available Now'
-          ) : (
-            <span>
-              Booked <small className="available-date">(Until: {item.booked_till})</small>
-            </span>
-          )}
-        </div>
+       
       </div>
       
       <div className="card-body">
@@ -63,6 +54,16 @@ const GearCard = ({ item }) => {
           </div>
 
           { isAvailable ? 'Available' : 'Not Available'}
+           <div className={`status-badge ${isAvailable ? 'available' : 'booked'}`}>
+          <span className="status-dot"></span>
+          {isAvailable ? (
+            'Available Now'
+          ) : (
+            <span>
+              Booked <small className="available-date">(Until: {item.booked_till})</small>
+            </span>
+          )}
+        </div>
           
           {/*<button 
             className="card-action" 

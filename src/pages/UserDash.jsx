@@ -894,6 +894,7 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
                         <div className="col col-owner">Owner</div>
                         <div className="col col-price">Total Price</div>
                         <div className="col col-status">Status</div>
+                        <div className="col col-actions">Actions</div>
                       </div>
                       {outgoingReservations.filter(res => res.status === 'pending').map((res) => (
                         <div key={res.reservation_id} className="table-row">
@@ -911,6 +912,15 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
                             <span className={`status-badge status-${res.status}`}>
                               {res.status === 'running' ? 'In Rent' : (res.status?.charAt(0).toUpperCase() + res.status?.slice(1) || 'Pending')}
                             </span>
+                          </div>
+                          <div className="col col-actions">
+                            <button 
+                              className="action-btn reject-btn"
+                              onClick={() => handleRejectReservation(res.reservation_id)}
+                              title="Cancel your rental request"
+                            >
+                              ✕ Cancel Request
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -1215,12 +1225,7 @@ function UserDash({ userData: passedUserData, setUserData, onNavigate }) {
                       />
                     </div>
                   </div>
-                  <div className="quick-ranges">
-                    <button onClick={() => setDateRange({ start: '2026-01-01', end: '2026-01-09' })}>This Week</button>
-                    <button onClick={() => setDateRange({ start: '2026-01-01', end: '2026-01-31' })}>This Month</button>
-                    <button onClick={() => setDateRange({ start: '2025-10-01', end: '2025-12-31' })}>Last Quarter</button>
-                    <button onClick={() => setDateRange({ start: '2025-01-01', end: '2025-12-31' })}>Last Year</button>
-                  </div>
+                  
                 </div>
               </div>
 
