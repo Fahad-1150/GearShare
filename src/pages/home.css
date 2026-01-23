@@ -125,8 +125,11 @@
   font-size: 1rem;
   font-weight: 500;
   height: 40px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  display: block;
+  margin: 0 auto;   /* centers the input */
 }
+
 
 
 @media (min-width: 768px) {
@@ -169,6 +172,7 @@
   cursor: pointer;
   transition: all 0.2s;
   font-size: 1.1rem;
+ 
   
 }
 

@@ -202,7 +202,21 @@ const Home = () => {
             The trusted peer-to-peer gear platform in Bangladesh
           </p>
 
-          <div className="search-container">
+         
+        </div>
+      </section>
+
+      <section className="listings-area">
+        <div className="listings-header">
+          <div>
+            <h2 className="grid-title">
+              {activeCategory === 'All' ? 'Trending Equipment' : `${activeCategory} Gear`}
+            </h2>
+            <p className="grid-subtitle">Check availability and upcoming dates for top gear.</p>
+          </div>
+          
+        </div>
+         <div className="search-container">
             <form onSubmit={handleSearch} className="search-box">
               <div className="input-field">
                 <div className="input-inner">
@@ -217,7 +231,6 @@ const Home = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <button type="submit" className="btn-search">Search</button>
               </div>
             </form>
           </div>
@@ -241,9 +254,9 @@ const Home = () => {
               onClick={() => setStatusFilter('all')}
               style={{
                 padding: '0.5rem 1rem',
-                border: statusFilter === 'all' ? '2px solid #ff6b35' : '2px solid #ddd',
+                border: statusFilter === 'all' ? '2px solid #7d2ae1' : '2px solid #ddd',
                 borderRadius: '8px',
-                background: statusFilter === 'all' ? '#ff6b35' : 'white',
+                background: statusFilter === 'all' ? '#5335ff' : 'white',
                 color: statusFilter === 'all' ? 'white' : '#333',
                 fontWeight: statusFilter === 'all' ? '600' : '500',
                 cursor: 'pointer',
@@ -285,21 +298,9 @@ const Home = () => {
               ✕ Not Available
             </button>
           </div>
-        </div>
-      </section>
-
-      <section className="listings-area">
-        <div className="listings-header">
-          <div>
-            <h2 className="grid-title">
-              {activeCategory === 'All' ? 'Trending Equipment' : `${activeCategory} Gear`}
-            </h2>
-            <p className="grid-subtitle">Check availability and upcoming dates for top gear.</p>
-          </div>
-          <button className="view-all" onClick={() => setActiveCategory('All')}>
-            View all listings →
-          </button>
-        </div>
+          <br></br>
+           <br></br>
+            <br></br>
 
         <div className="card-grid">
           {filteredGear.length > 0 ? (
