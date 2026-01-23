@@ -41,7 +41,7 @@
   width: 100%;
 }
 
-.stat-card {
+/* .stat-card {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -50,7 +50,7 @@
   border-radius: 12px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
+} */
 
 .stat-card.warning {
   border-color: #fbbf24;
@@ -83,7 +83,7 @@
 }
 
 
-
+/* 
 .search-input {
   flex: 1;
   min-width: 250px;
@@ -91,7 +91,7 @@
   border: 1px solid #ffffff;
   border-radius: 8px;
   font-size: 0.95rem;
-}
+} */
 
 .search-input:focus {
   outline: none;
@@ -100,13 +100,13 @@
 }
 
 
-.table-container {
+/* .table-container {
   background: #fff;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
+} */
 
 .rentals-table {
   width: 100%;
@@ -129,6 +129,8 @@
   padding: 1rem;
   border-bottom: 1px solid #f3f4f6;
   color: #000000;
+  overflow: hidden;
+  white-space: normal;
 }
 
 .rentals-table tbody tr:hover {
@@ -293,6 +295,8 @@
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
+  white-space: nowrap;
+  position: relative;
 }
 
 .status-badge.status-pending {
@@ -322,7 +326,7 @@
 }
 
 /* Modal Styles */
-.modal-overlay {
+/* .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -333,7 +337,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-}
+} */
 
 .modal-content {
   background: white;

@@ -27,7 +27,7 @@
   margin-bottom: 2rem;
 }
 
-.stat-card {
+/* .stat-card {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -36,7 +36,7 @@
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
-}
+} */
 
 .stat-card:hover {
   transform: translateY(-2px);
@@ -236,12 +236,12 @@
   letter-spacing: 2px;
 }
 
-/* Action Buttons */
+/* Action Buttons
 .action-buttons {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-}
+} */
 
 .action-btn {
   padding: 0.5rem 0.75rem;

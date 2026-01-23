@@ -122,7 +122,7 @@ html, body, #root {
   border: 1px solid #ede9fe;
 }
 
-.stat-card {
+/* .stat-card {
   background: white;
   border: none;
   border-radius: 12px;
@@ -132,7 +132,7 @@ html, body, #root {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
-}
+} */
 
 .stat-card::before {
   content: '';
@@ -476,7 +476,7 @@ html, body, #root {
   gap: 0.5rem;
 }
 
-.listing-card {
+/* .listing-card {
   background: white;
   border-radius: 20px;
   border: 1px solid #f1f5f9;
@@ -486,7 +486,7 @@ html, body, #root {
   flex-direction: column;
   height: 100%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
+} */
 
 .listing-card:hover {
   transform: translateY(-8px);
@@ -626,7 +626,7 @@ html, body, #root {
   z-index: 1;
 }
 
-.history-filters .search-input {
+/* .history-filters .search-input {
   flex: 1;
   padding: 0.75rem 1rem;
   border: 1px solid #e5e7eb;
@@ -635,7 +635,7 @@ html, body, #root {
   outline: none;
   transition: border-color 0.2s ease;
   background: white;
-}
+} */
 
 .history-filters .search-input:focus {
   border-color: var(--accent);
@@ -665,10 +665,10 @@ html, body, #root {
   border-color: var(--accent);
 }
 
-.table-container {
+/* .table-container {
   overflow-x: auto;
   position: relative;
-}
+} */
 
 /* Status Text Colors */
 .status-text {
@@ -767,7 +767,7 @@ html, body, #root {
   }
 }
 /* Modal Styles */
-.modal-overlay {
+/* .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -779,7 +779,7 @@ html, body, #root {
   align-items: center;
   z-index: 1000;
   padding: 1rem;
-}
+} */
 
 .modal-content {
   background: white;
@@ -920,9 +920,9 @@ margin-top: auto;
   50% { opacity: 1; }
 }
 
-.card-container {
+/* .card-container {
   position: relative;
-}
+} */
 
 .card-actions {
   display: flex;
@@ -1074,7 +1074,7 @@ margin-top: auto;
 
 .status-badge {
   display: inline-block;
-  padding: 0.4rem 0.8rem;
+  
   border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
@@ -1083,6 +1083,7 @@ margin-top: auto;
 }
 
 .status-badge.status-pending {
+  
   background-color: #fef3c7;
   color: #92400e;
 }
