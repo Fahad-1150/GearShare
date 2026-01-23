@@ -174,8 +174,8 @@
 }
 
 /* Table Styles */
-.table-container {
-  background: white;
+.table-containerrev {
+  background: rgb(193, 139, 252);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -207,7 +207,7 @@
 }
 
 .reviews-table tbody tr:hover {
-  background-color: #f9fafb;
+  
 }
 
 .reviews-table td {
@@ -228,7 +228,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #6b7280;
+  color: #000000;
 }
 
 .rating-display {

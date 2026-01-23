@@ -28,7 +28,7 @@ const ReviewForm = ({ reservation, equipment, onClose, onSuccess }) => {
       };
       console.log('Submitting review with payload:', reviewPayload);
       
-      const response = await apiRequest('/api/review/', {
+      const response = await apiRequest('/review/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reviewPayload)

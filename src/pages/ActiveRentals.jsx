@@ -234,8 +234,8 @@ const ActiveRentals = ({ userData, onNavigate }) => {
                   onChange={(e) => setEditData({...editData, status: e.target.value})}
                 >
                   <option value="pending">Pending</option>
-                  <option value="active">Active</option>
-                  <option value="completed">Completed</option>
+                  <option value="running">Running</option>
+                  <option value="returned">Returned</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
               </div>
@@ -288,29 +288,7 @@ const ActiveRentals = ({ userData, onNavigate }) => {
           <p>Manage all rental transactions and reservations</p>
         </div>
 
-        <div className="stats-row">
-          <div className="stat-card">
-            <span className="stat-icon">📦</span>
-            <div className="stat-info">
-              <span className="stat-number">{filteredRentals.length}</span>
-              <span className="stat-text">Total Rentals</span>
-            </div>
-          </div>
-          <div className="stat-card">
-            <span className="stat-icon">⏳</span>
-            <div className="stat-info">
-              <span className="stat-number">{pendingCount}</span>
-              <span className="stat-text">Pending Approval</span>
-            </div>
-          </div>
-          <div className="stat-card">
-            <span className="stat-icon">💵</span>
-            <div className="stat-info">
-              <span className="stat-number">{totalValue.toFixed(2)}</span>
-              <span className="stat-text">Total Value</span>
-            </div>
-          </div>
-        </div>
+       
 
         <div className="filters-section">
           <div className="search-row">

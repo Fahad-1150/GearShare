@@ -31,7 +31,7 @@ class ReviewResponse(BaseModel):
 
 
 # CREATE review
-@router.post("/review/", response_model=ReviewResponse)
+@router.post("/", response_model=ReviewResponse)
 def create_review(review_data: ReviewCreate):
     # Validate rating
     if review_data.rating < 1 or review_data.rating > 5:

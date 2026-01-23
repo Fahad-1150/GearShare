@@ -194,29 +194,7 @@ const ReviewsAdmin = ({ userData, onNavigate }) => {
           <p>Manage all equipment and rental reviews</p>
         </div>
 
-        <div className="stats-row">
-          <div className="stat-card">
-            <span className="stat-icon">⭐</span>
-            <div className="stat-info">
-              <span className="stat-number">{averageRating}</span>
-              <span className="stat-text">Average Rating</span>
-            </div>
-          </div>
-          <div className="stat-card">
-            <span className="stat-icon">📝</span>
-            <div className="stat-info">
-              <span className="stat-number">{reviews.length}</span>
-              <span className="stat-text">Total Reviews</span>
-            </div>
-          </div>
-          <div className="stat-card">
-            <span className="stat-icon">👍</span>
-            <div className="stat-info">
-              <span className="stat-number">{fiveStarCount}</span>
-              <span className="stat-text">5 Star Reviews</span>
-            </div>
-          </div>
-        </div>
+       
 
         <div className="rating-breakdown">
           <h3>Rating Distribution</h3>
@@ -258,7 +236,7 @@ const ReviewsAdmin = ({ userData, onNavigate }) => {
           </div>
         </div>
 
-        <div className="table-container">
+        <div className="table-containerrev">
           <table className="reviews-table">
             <thead>
               <tr>

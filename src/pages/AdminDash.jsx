@@ -67,12 +67,7 @@ const AdminDash = ({ userData, onNavigate }) => {
 
   // Sample rental history data
   const rentalHistory = [
-    { id: 'R001', user: 'John Doe', item: 'Canon EOS R5', startDate: '2026-01-01', endDate: '2026-01-05', status: 'Completed', amount: '$150' },
-    { id: 'R002', user: 'Jane Smith', item: 'DJI Mavic 3', startDate: '2026-01-03', endDate: '2026-01-07', status: 'Active', amount: '$200' },
-    { id: 'R003', user: 'Mike Johnson', item: 'Sony A7 IV', startDate: '2026-01-02', endDate: '2026-01-04', status: 'Completed', amount: '$120' },
-    { id: 'R004', user: 'Sarah Wilson', item: 'GoPro Hero 12', startDate: '2026-01-05', endDate: '2026-01-08', status: 'Active', amount: '$80' },
-    { id: 'R005', user: 'Tom Brown', item: 'Rode Wireless GO II', startDate: '2025-12-28', endDate: '2026-01-02', status: 'Completed', amount: '$50' },
-    { id: 'R006', user: 'Emily Davis', item: 'Zhiyun Crane 3S', startDate: '2026-01-06', endDate: '2026-01-10', status: 'Pending', amount: '$90' },
+    
   ];
 
   const handleStatClick = (path) => {
